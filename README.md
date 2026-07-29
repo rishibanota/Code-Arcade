@@ -3,7 +3,9 @@
 Six coding mini-games in one web app, served from **Termux** on your phone.
 No internet, no npm, no pip — just Python's standard library.
 
-![Logo](assets/icon.png)
+<p align="center">
+  <img src="assets/icon.png" alt="Logo" width="180">
+</p>
 
 ---
 

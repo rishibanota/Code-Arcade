@@ -9,6 +9,10 @@ No internet, no npm, no pip — just Python's standard library.
 
 ---
 
+Live Demo: [code-arcade-psi.vercel.app](https://code-arcade-psi.vercel.app/)
+
+---
+
 ## Quick start (Termux)
 
 ```bash
@@ -26,7 +30,7 @@ chmod +x run.sh
 ./run.sh                    # ./run.sh 5000 for a different port
 ```
 
-**Play it like a real app:** in Chrome tap ⋮ → *Add to Home Screen*.
+**Play it like a real app:** in Chrome tap ⋮ → _Add to Home Screen_.
 It installs as a PWA, runs full-screen, and works with Wi-Fi and data off.
 
 > The terminal also prints a `http://192.168.x.x:8080` address — open that on a
@@ -36,14 +40,14 @@ It installs as a PWA, runs full-screen, and works with Wi-Fi and data off.
 
 ## The games
 
-| Game | What you do | What it teaches |
-|---|---|---|
-| 🐞 **Bug Hunter** | Tap the line hiding the bug before the timer dies | Off-by-one, `=` vs `==`, mutable defaults, scope, dangling pointers |
-| 🔮 **Output Oracle** | Predict exactly what a snippet prints | Type coercion, integer division, float precision, operator order |
-| 🧩 **Stack Rebuild** | Reorder scrambled lines (indentation counts) | Program structure: FizzBuzz → binary search → quicksort partition |
-| 🔢 **Binary Blaster** | Flip 8 bits to hit the target before the fuse burns | Binary/hex conversion and bitwise `AND` `OR` `XOR` |
-| 🎯 **Regex Ranger** | Write a pattern matching green strings, not red | Regex, live-highlighted, with a token keypad so you don't fight the keyboard |
-| ⌨️ **Terminal Typer** | Type real code lines at speed | Symbol-heavy typing speed and accuracy |
+| Game                  | What you do                                         | What it teaches                                                              |
+| --------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 🐞 **Bug Hunter**     | Tap the line hiding the bug before the timer dies   | Off-by-one, `=` vs `==`, mutable defaults, scope, dangling pointers          |
+| 🔮 **Output Oracle**  | Predict exactly what a snippet prints               | Type coercion, integer division, float precision, operator order             |
+| 🧩 **Stack Rebuild**  | Reorder scrambled lines (indentation counts)        | Program structure: FizzBuzz → binary search → quicksort partition            |
+| 🔢 **Binary Blaster** | Flip 8 bits to hit the target before the fuse burns | Binary/hex conversion and bitwise `AND` `OR` `XOR`                           |
+| 🎯 **Regex Ranger**   | Write a pattern matching green strings, not red     | Regex, live-highlighted, with a token keypad so you don't fight the keyboard |
+| ⌨️ **Terminal Typer** | Type real code lines at speed                       | Symbol-heavy typing speed and accuracy                                       |
 
 ---
 
@@ -53,7 +57,7 @@ It installs as a PWA, runs full-screen, and works with Wi-Fi and data off.
 - **Combos** — consecutive correct answers multiply your score (capped at ×8).
 - **Boss rounds** — every 10th question is worth **3×** on a tighter clock.
 - **Coins & Shop** — buy power-ups, unlock **5 themes** (Neon, Matrix, Synthwave, Amber CRT, Paper).
-- **24 badges** — from *First Blood* to *Regex Golfer* and *Keyboard Ninja*.
+- **24 badges** — from _First Blood_ to _Regex Golfer_ and _Keyboard Ninja_.
 - **Daily Gauntlet** — all six games chained into one run. Same puzzles for everyone
   that day (date-seeded), and clearing all six builds your 🔥 **streak**.
 - **Power-ups** — 50/50, Freeze (+time), Hint, Skip.

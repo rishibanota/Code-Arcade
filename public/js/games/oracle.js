@@ -21,7 +21,7 @@ export function play(opts = {}){
     if (kind === 'freeze'){ Host.addTime(10000); toast('+10 seconds', '❄'); return true; }
     if (kind === 'fifty'){
       const wrongEls = [...Host.area.querySelectorAll('.opt')]
-        .filter(e => e.dataset.val !== cur.a && !e.classList.contains('gone'));
+        .filter(e => e.dataset.val !== cur.a && e.dataset.val !== C.esc(cur.a) && !e.classList.contains('gone'));
       if (wrongEls.length < 2) return false;
       C.shuffle(wrongEls, rnd).slice(0, 2).forEach(e => e.classList.add('gone'));
       return true;

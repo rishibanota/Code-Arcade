@@ -243,6 +243,9 @@ export const Host = {
     $('#gameBar').style.display = opts.hideBar ? 'none' : 'grid';
     $('#powerBar').style.display = opts.hidePowers ? 'none' : 'flex';
     $('#timerBar').style.display = opts.hideTimer ? 'none' : 'block';
+    
+    const pwFifty = $('#powerBar').querySelector('[data-pw="fifty"]');
+    if (pwFifty) pwFifty.style.display = gameId === 'oracle' ? '' : 'none';
     C.startRun(gameId);
     this.sync();
     go('game');

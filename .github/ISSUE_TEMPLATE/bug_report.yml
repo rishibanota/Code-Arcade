@@ -1,0 +1,66 @@
+name: 🐞 Bug Report
+description: Create a report to help us fix a bug or issue in Code Arcade
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill in as much information as possible to help us reproduce and fix it.
+  - type: input
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: A clear and concise summary of what the bug is.
+      placeholder: e.g. Output Oracle score calculation drops when answering rapidly
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Explain step-by-step how to trigger this bug.
+      placeholder: |
+        1. Go to 'Output Oracle'
+        2. Click on answer option 'B'
+        3. Fast double-tap next question
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: dropdown
+    id: game-affected
+    attributes:
+      label: Game / Area Affected
+      options:
+        - "General / Core UI / PWA"
+        - "🐞 Bug Hunter"
+        - "🔮 Output Oracle"
+        - "🧩 Stack Rebuild"
+        - "🔢 Binary Blaster"
+        - "🎯 Regex Ranger"
+        - "⌨️ Terminal Typer"
+        - "Daily Gauntlet / Stats / Shop"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment & Device Details
+      description: Browser, OS (e.g. Chrome on Android Termux, Firefox on Windows), screen size.
+      placeholder: e.g. Chrome Mobile 120 on Android 14 / Termux Python 3.11 server
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Logs
+      description: Add any relevant screenshots, browser console logs, or stack traces.
+    validations:
+      required: false

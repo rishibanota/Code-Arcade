@@ -1,0 +1,38 @@
+name: 💡 Feature Request
+description: Suggest an idea or new feature for Code Arcade
+title: "[FEATURE]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for a new game mode, power-up, theme, or feature? Let us know!
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: Describe the feature, how it works, and why it would be valuable.
+      placeholder: e.g. Add a sound effect mute toggle directly on the HUD...
+    validations:
+      required: true
+  - type: textarea
+    id: problem-solved
+    attributes:
+      label: Problem or Motivation
+      description: Is your feature request related to a problem or limitation?
+    validations:
+      required: false
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Design / Solution
+      description: Describe how you envision this feature working in the app.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Options
+      description: Any alternative solutions or features you've considered.
+    validations:
+      required: false

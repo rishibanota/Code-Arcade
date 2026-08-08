@@ -1,0 +1,56 @@
+name: 🧩 Submit New Question / Snippet
+description: Propose a new code snippet, puzzle, or question for bank.js
+title: "[QUESTION]: "
+labels: ["content", "question-bank"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Want to add a question to Code Arcade? Provide your snippet details below!
+  - type: dropdown
+    id: game-type
+    attributes:
+      label: Target Game
+      options:
+        - "🐞 Bug Hunter"
+        - "🔮 Output Oracle"
+        - "🧩 Stack Rebuild"
+        - "🔢 Binary Blaster"
+        - "🎯 Regex Ranger"
+        - "⌨️ Terminal Typer"
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Programming Language / Syllabus
+      options:
+        - "py (Python)"
+        - "js (JavaScript)"
+        - "c (C Language)"
+        - "java (Java)"
+        - "uni (Universal)"
+    validations:
+      required: true
+  - type: textarea
+    id: snippet-code
+    attributes:
+      label: Code Snippet / Object Definition
+      description: Provide the JS object or raw code snippet formatted for bank.js.
+      placeholder: |
+        {
+          lang: 'py',
+          diff: 2,
+          lines: ['def foo():', '    pass'],
+          bug: 1,
+          why: 'Explanation here'
+        }
+    validations:
+      required: true
+  - type: textarea
+    id: explanation
+    attributes:
+      label: Explanation / Teaching Point
+      description: What programming concept or common pitfall does this question teach?
+    validations:
+      required: true

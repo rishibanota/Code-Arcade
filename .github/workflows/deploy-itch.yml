@@ -23,10 +23,10 @@ jobs:
           cd ..
 
       - name: Deploy to itch.io via Butler
-        uses: JosephusPaye/butler-publish-action@v1.0.0
+        uses: manleydev/butler-publish-itchio-action@master
         env:
           BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
           CHANNEL: html5
-          GAME: code-arcade
-          USER: ${{ secrets.ITCH_USERNAME || 'rishibanota' }}
+          ITCH_GAME: code-arcade
+          ITCH_USER: ${{ secrets.ITCH_USERNAME || 'rishibanota' }}
           PACKAGE: dist/code-arcade.zip

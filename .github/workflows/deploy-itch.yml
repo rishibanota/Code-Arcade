@@ -1,0 +1,32 @@
+name: Deploy Code Arcade to itch.io
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    name: Build & Publish to itch.io
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Zip Package for itch.io
+        run: |
+          mkdir -p dist
+          cd public
+          zip -r ../dist/code-arcade.zip .
+          cd ..
+
+      - name: Deploy to itch.io via Butler
+        uses: JosephusPaye/butler-publish-action@v1.0.0
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
+          CHANNEL: html5
+          GAME: code-arcade
+          USER: ${{ secrets.ITCH_USERNAME || 'rishibanota' }}
+          PACKAGE: dist/code-arcade.zip

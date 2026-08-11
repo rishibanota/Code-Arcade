@@ -22,11 +22,10 @@ jobs:
           zip -r ../dist/code-arcade.zip .
           cd ..
 
-      - name: Deploy to itch.io via Butler
-        uses: manleydev/butler-publish-itchio-action@master
+      - name: Set up Butler
+        uses: remarkablegames/setup-butler@v3
+
+      - name: Deploy to itch.io
+        run: butler push dist/code-arcade.zip rishigamer20062/code-arcade:html5
         env:
-          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
-          CHANNEL: html5
-          ITCH_GAME: code-arcade
-          ITCH_USER: ${{ secrets.ITCH_USERNAME || 'rishigamer20062' }}
-          PACKAGE: dist/code-arcade.zip
+          BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}

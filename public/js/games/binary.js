@@ -12,7 +12,7 @@ export function play(opts = {}){
   let target = 0, mode = 'dec2bin', locked = false, streak = 0, prompt = '';
 
   if (!opts.embedded){
-    Host.begin('binary', { onPower: power, again: () => play(opts) });
+    Host.begin('binary', { onPower: power, again: (extra) => play({ ...opts, ...extra }) });
   } else {
     Host._onPower = power;
   }
@@ -70,7 +70,7 @@ export function play(opts = {}){
       locked = true;
       Host.miss(true, Host.area);
       toast(`Time! It was ${target}`, '💥');
-      setTimeout(() => Host.lives > 0 ? nextTarget() : done(), 620);
+      setTimeout(() => { if (!Host.active) return; Host.lives > 0 ? nextTarget() : done(); }, 620);
     });
 
     draw();
@@ -134,13 +134,13 @@ export function play(opts = {}){
       Host.hit(90 + Math.max(0, bonus), Host.area.querySelector('#fireBtn'));
       C.burst(innerWidth / 2, innerHeight / 2, 34, null);
       if (streak % 5 === 0) toast(`${streak} in a row!`, '🔥', true);
-      setTimeout(nextTarget, 430);
+      setTimeout(() => { if (Host.active) nextTarget(); }, 430);
     } else {
       streak = 0;
       const alive = Host.miss(true, Host.area);
       const want = target.toString(2).padStart(8, '0');
       toast(`Off by ${Math.abs(v - target)} — needed ${want}`, '💥');
-      setTimeout(() => alive ? nextTarget() : done(), 900);
+      setTimeout(() => { if (!Host.active) return; alive ? nextTarget() : done(); }, 900);
     }
   }
 

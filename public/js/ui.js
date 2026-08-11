@@ -227,14 +227,22 @@ export const Host = {
   active: null, score: 0, lives: 3, combo: 0, maxCombo: 0, round: 0,
   correct: 0, wrong: 0, bosses: 0, startTs: 0,
   _timerId: null, _tEnd: 0, _tTotal: 0, _onTimeout: null, _onPower: null,
-  _gameOverExtra: null, _againFn: null,
+  _gameOverExtra: null, _againFn: null, _lastRunState: null, _revivedThisRun: false,
 
   get area(){ return $('#gameArea'); },
 
   begin(gameId, opts = {}){
     this.active = gameId;
-    this.score = 0; this.lives = opts.lives ?? 3; this.combo = 0; this.maxCombo = 0;
-    this.round = 0; this.correct = 0; this.wrong = 0; this.bosses = 0;
+    this._lastGameOpts = opts;
+    this.score = opts.initialScore ?? 0;
+    this.lives = opts.lives ?? 3;
+    this.combo = 0;
+    this.maxCombo = 0;
+    this.round = opts.initialRound ?? 0;
+    this.correct = opts.initialCorrect ?? 0;
+    this.wrong = opts.initialWrong ?? 0;
+    this.bosses = 0;
+    this._revivedThisRun = opts.revivedThisRun ?? false;
     this.stageLabel = null;
     this.startTs = Date.now();
     this._onPower = opts.onPower || null;
@@ -245,7 +253,7 @@ export const Host = {
     $('#timerBar').style.display = opts.hideTimer ? 'none' : 'block';
     
     const pwFifty = $('#powerBar').querySelector('[data-pw="fifty"]');
-    if (pwFifty) pwFifty.style.display = gameId === 'oracle' ? '' : 'none';
+    if (pwFifty) pwFifty.style.display = (gameId === 'oracle' || gameId === 'daily') ? '' : 'none';
     C.startRun(gameId);
     this.sync();
     go('game');
@@ -325,6 +333,17 @@ export const Host = {
   finish(extra = {}){
     this.stopTimer();
     const gameId = this.active;
+    
+    this._lastRunState = {
+      gameId: gameId,
+      opts: this._lastGameOpts,
+      score: this.score,
+      round: this.round,
+      correct: this.correct,
+      wrong: this.wrong,
+      revived: this._revivedThisRun
+    };
+
     this.active = null;
     C.sfx('end');
     const secs = Math.round((Date.now() - this.startTs) / 1000);
@@ -350,6 +369,12 @@ export const Host = {
     ];
     $('#resRows').innerHTML = rows.map(([k, v]) =>
       `<div class="res-row"><span>${k}</span><b>${v}</b></div>`).join('');
+
+    const reviveBtn = $('#reviveBtn');
+    if (reviveBtn){
+      const canRevive = !this._revivedThisRun && gameId && gameId !== 'daily' && this.lives <= 0;
+      reviveBtn.style.display = canRevive ? 'block' : 'none';
+    }
 
     if (res.isBest){
       C.burst(innerWidth / 2, innerHeight / 3, 60);
@@ -419,6 +444,14 @@ export function wireUI(launcher){
     C.sfx('tap');
     if (Host._againFn) Host._againFn(); else go('home', false);
   };
+
+  const reviveBtn = $('#reviveBtn');
+  if (reviveBtn){
+    reviveBtn.onclick = () => {
+      C.sfx('tap');
+      showAdsterraReviveModal();
+    };
+  }
 
   $('#powerBar').onclick = e => {
     const b = e.target.closest('[data-pw]'); if (!b) return;
@@ -507,6 +540,76 @@ export function wireUI(launcher){
 
   window.addEventListener('beforeunload', () => C.saveNow());
   document.addEventListener('visibilitychange', () => { if (document.hidden) C.saveNow(); });
+}
+
+export function showAdsterraReviveModal(){
+  const SMARTLINK = 'https://www.effectivecpmnetwork.com/s4809taauu?key=711146abf42c05c32d840e7bfdd880ee';
+
+  modal(`
+    <div style="text-align:center; padding: 10px;">
+      <h3 style="color:#10b981; margin-bottom:8px;">🎬 REVIVE (+1 ❤️)</h3>
+      <p style="font-size:0.9rem; color:#94a3b8; margin-bottom:12px;">Support Code Arcade by visiting our sponsor!</p>
+
+      <button class="big-btn" id="mOpenAd" style="background:linear-gradient(135deg,#059669,#10b981); margin-bottom:12px;">
+        📢 Open Sponsor Page
+      </button>
+
+      <button class="big-btn" id="mClaimRevive" disabled style="background:linear-gradient(135deg,#059669,#10b981); opacity:0.5;">
+        Open sponsor page first ☝️
+      </button>
+    </div>
+  `, card => {
+    const claimBtn = card.querySelector('#mClaimRevive');
+    const openBtn = card.querySelector('#mOpenAd');
+
+    openBtn.onclick = () => {
+      window.open(SMARTLINK, '_blank');
+      openBtn.textContent = '✅ Sponsor page opened!';
+      openBtn.disabled = true;
+      openBtn.style.opacity = '0.6';
+
+      // Start countdown only after sponsor page is opened
+      let count = 5;
+      claimBtn.innerHTML = 'Reviving in <span id="mTimer">5</span>s...';
+      const timerSpan = claimBtn.querySelector('#mTimer');
+
+      const timer = setInterval(() => {
+        count--;
+        if (timerSpan) timerSpan.textContent = count;
+        if (count <= 0){
+          clearInterval(timer);
+          claimBtn.disabled = false;
+          claimBtn.style.opacity = '1';
+          claimBtn.innerHTML = '🎉 CLAIM REVIVE (+1 ❤️)';
+        }
+      }, 1000);
+
+      claimBtn.onclick = () => {
+        if (claimBtn.disabled) return;
+        clearInterval(timer);
+        closeModal();
+        toast('Revived with +1 Heart!', '❤️');
+
+        const last = Host._lastRunState;
+        if (last && last.gameId){
+          const runnerOpts = {
+            ...(last.opts || {}),
+            lives: 1,
+            initialScore: last.score,
+            initialRound: Math.max(0, last.round - 1),
+            initialCorrect: last.correct,
+            initialWrong: last.wrong,
+            revivedThisRun: true
+          };
+          if (last.opts && last.opts.again){
+            last.opts.again(runnerOpts);
+          } else if (window.CodeArcade?.launch){
+            window.CodeArcade.launch(last.gameId);
+          }
+        }
+      };
+    };
+  });
 }
 
 export { $, $$ };

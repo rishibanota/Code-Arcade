@@ -113,12 +113,7 @@ maybeIntro();
 
 document.addEventListener('click', () => C.unlockAudio(), { once:true });
 
-// Block accidental pull-to-refresh mid-game
-document.addEventListener('touchmove', e => {
-  if (window.scrollY === 0 && e.touches[0].clientY > 60 && Host.active){
-    // allow normal scroll, only guard the overscroll at very top
-  }
-}, { passive:true });
+
 
 if ('serviceWorker' in navigator){
   window.addEventListener('load', () => {

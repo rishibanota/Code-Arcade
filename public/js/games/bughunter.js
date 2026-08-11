@@ -11,7 +11,7 @@ export function play(opts = {}){
   let idx = 0, locked = false, hintUsed = false;
 
   if (!opts.embedded){
-    Host.begin('bughunter', { onPower: power, again: () => play(opts) });
+    Host.begin('bughunter', { onPower: power, again: (extra) => play({ ...opts, ...extra }) });
   } else {
     Host._onPower = power;
   }
@@ -22,7 +22,7 @@ export function play(opts = {}){
     if (kind === 'hint'){
       if (hintUsed) return false;
       hintUsed = true;
-      const q = pool[idx % pool.length];
+      const q = pool[(idx - 1) % pool.length];
       const safe = q.lines.map((_, i) => i).filter(i => i !== q.bug && q.lines[i].trim());
       C.shuffle(safe, rnd).slice(0, Math.max(1, Math.ceil(safe.length / 2))).forEach(i => {
         const el = Host.area.querySelector(`[data-line="${i}"]`);

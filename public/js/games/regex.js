@@ -12,7 +12,7 @@ export function play(opts = {}){
   let idx = 0, cur = null, locked = false, solved = false;
 
   if (!opts.embedded){
-    Host.begin('regex', { lives: 99, onPower: power, again: () => play(opts) });
+    Host.begin('regex', { lives: 99, onPower: power, again: (extra) => play({ ...opts, ...extra }) });
   } else {
     Host._onPower = power;
   }
@@ -61,6 +61,7 @@ export function play(opts = {}){
     const input = Host.area.querySelector('#rx');
     input.addEventListener('input', update);
     Host.area.querySelector('#pad').onclick = e => {
+      if (locked) return;
       const b = e.target.closest('[data-k]'); if (!b) return;
       const k = b.dataset.k;
       C.sfx('tap'); C.buzz(8);

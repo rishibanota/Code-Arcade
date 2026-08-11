@@ -13,7 +13,7 @@ export function play(opts = {}){
   let idx = 0, cur = null, order = [], indents = [], sel = null, moves = 0, locked = false;
 
   if (!opts.embedded){
-    Host.begin('parsons', { lives: 99, hideTimer: false, onPower: power, again: () => play(opts) });
+    Host.begin('parsons', { lives: 99, hideTimer: false, onPower: power, again: (extra) => play({ ...opts, ...extra }) });
   } else {
     Host._onPower = power;
   }
@@ -22,13 +22,23 @@ export function play(opts = {}){
     if (locked) return false;
     if (kind === 'freeze'){ Host.addTime(15000); toast('+15 seconds', '❄'); return true; }
     if (kind === 'hint'){
-      // Put one wrong line into its correct slot.
+      // Put one wrong line into its correct slot, or fix one wrong indent.
       for (let i = 0; i < order.length; i++){
         if (order[i] !== i){
           const j = order.indexOf(i);
           [order[i], order[j]] = [order[j], order[i]];
+          [indents[i], indents[j]] = [indents[j], indents[i]];
           indents[i] = cur.lines[i].i;
           C.sfx('correct'); draw(); return true;
+        }
+      }
+      // All lines are in order — fix one wrong indent instead.
+      if (cur.indentMatters){
+        for (let i = 0; i < order.length; i++){
+          if (indents[i] !== cur.lines[i].i){
+            indents[i] = cur.lines[i].i;
+            C.sfx('correct'); draw(); return true;
+          }
         }
       }
       return false;

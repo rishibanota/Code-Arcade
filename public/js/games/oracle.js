@@ -11,7 +11,7 @@ export function play(opts = {}){
   let idx = 0, locked = false, cur = null, curOpts = [];
 
   if (!opts.embedded){
-    Host.begin('oracle', { onPower: power, again: () => play(opts) });
+    Host.begin('oracle', { onPower: power, again: (extra) => play({ ...opts, ...extra }) });
   } else {
     Host._onPower = power;
   }
@@ -80,6 +80,7 @@ export function play(opts = {}){
     const left = Host._tEnd - Date.now();
     Host.stopTimer();
     const isBoss = Host.round % 10 === 0;
+    const maxTime = (isBoss ? 12 : 20) * 1000;
 
     Host.area.querySelectorAll('.opt').forEach(o => {
       if (o.dataset.val === C.esc(cur.a) || o.dataset.val === cur.a) o.classList.add('right');
@@ -90,7 +91,7 @@ export function play(opts = {}){
     const ok = val !== null && (val === cur.a || val === C.esc(cur.a));
     if (ok){
       S.stats.oracles++;
-      const speedBonus = Math.max(0, Math.round(left / 200));
+      const speedBonus = Math.max(0, Math.round(Math.min(left, maxTime) / 200));
       Host.hit((isBoss ? 300 : 130) + speedBonus, el);
     } else {
       if (el) el.classList.add('wrong');

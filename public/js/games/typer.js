@@ -11,7 +11,7 @@ export function play(opts = {}){
   let idx = 0, cur = '', started = 0, typedChars = 0, errors = 0, wpmBest = 0, locked = false;
 
   if (!opts.embedded){
-    Host.begin('typer', { lives: 99, onPower: power, again: () => play(opts) });
+    Host.begin('typer', { lives: 99, onPower: power, again: (extra) => play({ ...opts, ...extra }) });
   } else {
     Host._onPower = power;
   }
@@ -35,7 +35,7 @@ export function play(opts = {}){
       locked = true;
       Host.miss(false, Host.area);
       toast('Too slow!', '⏱');
-      setTimeout(nextLine, 520);
+      setTimeout(() => { if (Host.active) nextLine(); }, 520);
     });
     render('');
     setTimeout(() => {
@@ -103,7 +103,7 @@ export function play(opts = {}){
   }
 
   function liveWpm(typed){
-    if (!started || !typed.length) return 0;
+    if (!started || typed.length < 2) return 0;
     return wpmOf(typed.length, Date.now() - started);
   }
 
@@ -126,7 +126,7 @@ export function play(opts = {}){
       Host.miss(false, Host.area);
       toast(`${wrongChars} wrong character${wrongChars > 1 ? 's' : ''} (${acc}%)`, '⚠');
     }
-    setTimeout(nextLine, 700);
+    setTimeout(() => { if (Host.active) nextLine(); }, 700);
   }
 
   nextLine();

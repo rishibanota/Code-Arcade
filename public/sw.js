@@ -1,5 +1,5 @@
 /* Code Arcade service worker — offline cache */
-const CACHE = 'codearcade-v1';
+const CACHE = 'codearcade-v2';
 const FILES = [
   './', './index.html', './manifest.webmanifest', './icons/icon.svg',
   './css/style.css',
@@ -20,13 +20,21 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
   e.respondWith(
     fetch(e.request)
       .then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+        }
         return res;
       })
-      .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
+      .catch(() => caches.match(e.request).then(r => {
+        if (r) return r;
+        if (e.request.mode === 'navigate') return caches.match('./index.html');
+        return new Response('', { status: 408 });
+      }))
   );
 });

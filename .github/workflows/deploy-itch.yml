@@ -28,5 +28,5 @@ jobs:
           BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
           CHANNEL: html5
           ITCH_GAME: code-arcade
-          ITCH_USER: ${{ secrets.ITCH_USERNAME || 'rishibanota' }}
+          ITCH_USER: ${{ secrets.ITCH_USERNAME || 'rishigamer20062' }}
           PACKAGE: dist/code-arcade.zip

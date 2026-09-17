@@ -1,5 +1,5 @@
 /* Code Arcade service worker — offline cache */
-const CACHE = 'codearcade-v2';
+const CACHE = 'codearcade-v3';
 const FILES = [
   './', './index.html', './manifest.webmanifest', './icons/icon.svg',
   './css/style.css',

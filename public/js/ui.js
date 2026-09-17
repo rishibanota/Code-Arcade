@@ -146,6 +146,30 @@ function renderShop(){
         ${on ? '✓ Active' : owned ? 'Use' : t.cost + ' 🪙'}</button>
     </div>`;
   }).join('');
+
+  const hasPerk = hasUnlimitedRevives();
+  const shopPerks = $('#shopPerks');
+  if (shopPerks){
+    shopPerks.innerHTML = `
+      <div class="shop-item" style="grid-column: 1 / -1; border-color: #ff3ea5;">
+        <span class="si-ico">💖</span>
+        <b>Unlimited Revives</b>
+        <small>${hasPerk ? 'Active! Revive with +1 ❤️ as many times as you like in every game.' : 'Sponsor $1 on GitHub to unlock unlimited revives!'}</small>
+        <button class="buy ${hasPerk ? 'owned' : 'afford'}" id="shopSponsorBtn" style="${hasPerk ? '' : 'background:linear-gradient(135deg,#ff3ea5,#8a5cff);color:#fff'}">
+          ${hasPerk ? '✓ Active' : '💖 Sponsor $1'}
+        </button>
+      </div>
+    `;
+    const btn = $('#shopSponsorBtn');
+    if (btn && !hasPerk){
+      btn.onclick = () => {
+        window.open(SPONSOR_URL, '_blank');
+        grantUnlimitedRevives();
+        toast('Unlimited revives unlocked! 💖', '🎉', true);
+        renderShop();
+      };
+    }
+  }
 }
 
 /* ---------- PROFILE ---------- */
@@ -372,8 +396,14 @@ export const Host = {
 
     const reviveBtn = $('#reviveBtn');
     if (reviveBtn){
-      const canRevive = !this._revivedThisRun && gameId && gameId !== 'daily' && this.lives <= 0;
+      const isUnlimited = hasUnlimitedRevives();
+      const canRevive = (isUnlimited || !this._revivedThisRun) && gameId && gameId !== 'daily' && this.lives <= 0;
       reviveBtn.style.display = canRevive ? 'block' : 'none';
+      if (canRevive){
+        reviveBtn.textContent = isUnlimited
+          ? '💖 Revive +1 ❤️ (Unlimited)'
+          : '💖 Revive +1 ❤️ (Sponsor $1)';
+      }
     }
 
     if (res.isBest){
@@ -449,7 +479,11 @@ export function wireUI(launcher){
   if (reviveBtn){
     reviveBtn.onclick = () => {
       C.sfx('tap');
-      showAdsterraReviveModal();
+      if (hasUnlimitedRevives()){
+        doRevive();
+      } else {
+        showSponsorReviveModal();
+      }
     };
   }
 
@@ -542,73 +576,73 @@ export function wireUI(launcher){
   document.addEventListener('visibilitychange', () => { if (document.hidden) C.saveNow(); });
 }
 
-export function showAdsterraReviveModal(){
-  const SMARTLINK = 'https://www.effectivecpmnetwork.com/s4809taauu?key=711146abf42c05c32d840e7bfdd880ee';
+export const SPONSOR_URL = 'https://github.com/sponsors/rishibanota/sponsorships?sponsor=rishibanota&preview=true&frequency=one-time&amount=1';
 
+export function hasUnlimitedRevives(){
+  try {
+    if (sessionStorage.getItem('codearcade_unlimited_revives') === '1') return true;
+    if (localStorage.getItem('codearcade_unlimited_revives') === '1') return true;
+    if (document.cookie.split('; ').some(c => c.startsWith('codearcade_unlimited_revives=1'))) return true;
+  } catch {}
+  return false;
+}
+
+export function grantUnlimitedRevives(){
+  try { sessionStorage.setItem('codearcade_unlimited_revives', '1'); } catch {}
+  try { localStorage.setItem('codearcade_unlimited_revives', '1'); } catch {}
+  try { document.cookie = 'codearcade_unlimited_revives=1; path=/; SameSite=Lax'; } catch {}
+}
+
+export function doRevive(){
+  closeModal();
+  toast('Revived with +1 Heart!', '❤️');
+  const last = Host._lastRunState;
+  if (last && last.gameId){
+    const runnerOpts = {
+      ...(last.opts || {}),
+      lives: 1,
+      initialScore: last.score,
+      initialRound: Math.max(0, last.round - 1),
+      initialCorrect: last.correct,
+      initialWrong: last.wrong,
+      revivedThisRun: true
+    };
+    if (last.opts && last.opts.again){
+      last.opts.again(runnerOpts);
+    } else if (window.CodeArcade?.launch){
+      window.CodeArcade.launch(last.gameId);
+    }
+  }
+}
+
+export function showSponsorReviveModal(){
   modal(`
     <div style="text-align:center; padding: 10px;">
-      <h3 style="color:#10b981; margin-bottom:8px;">🎬 REVIVE (+1 ❤️)</h3>
-      <p style="font-size:0.9rem; color:#94a3b8; margin-bottom:12px;">Support Code Arcade by visiting our sponsor!</p>
+      <h3 style="color:#ff3ea5; margin-bottom:8px;">💖 UNLIMITED REVIVES</h3>
+      <p style="font-size:0.92rem; color:#94a3b8; margin-bottom:14px; line-height:1.4;">
+        Support Code Arcade on GitHub Sponsors for <b>$1</b> to unlock <b>unlimited revives</b>!
+      </p>
 
-      <button class="big-btn" id="mOpenAd" style="background:linear-gradient(135deg,#059669,#10b981); margin-bottom:12px;">
-        📢 Open Sponsor Page
+      <button class="big-btn" id="mOpenSponsor" style="background:linear-gradient(135deg,#ff3ea5,#8a5cff); margin-bottom:10px; font-weight:700;">
+        💖 Sponsor $1 on GitHub
       </button>
 
-      <button class="big-btn" id="mClaimRevive" disabled style="background:linear-gradient(135deg,#059669,#10b981); opacity:0.5;">
-        Open sponsor page first ☝️
-      </button>
+      <button class="ghost-btn wide" id="mCancelRevive">No thanks</button>
     </div>
   `, card => {
-    const claimBtn = card.querySelector('#mClaimRevive');
-    const openBtn = card.querySelector('#mOpenAd');
+    const openBtn = card.querySelector('#mOpenSponsor');
+    const cancelBtn = card.querySelector('#mCancelRevive');
 
-    openBtn.onclick = () => {
-      window.open(SMARTLINK, '_blank');
-      openBtn.textContent = '✅ Sponsor page opened!';
-      openBtn.disabled = true;
-      openBtn.style.opacity = '0.6';
+    if (cancelBtn) cancelBtn.onclick = closeModal;
 
-      // Start countdown only after sponsor page is opened
-      let count = 5;
-      claimBtn.innerHTML = 'Reviving in <span id="mTimer">5</span>s...';
-      const timerSpan = claimBtn.querySelector('#mTimer');
-
-      const timer = setInterval(() => {
-        count--;
-        if (timerSpan) timerSpan.textContent = count;
-        if (count <= 0){
-          clearInterval(timer);
-          claimBtn.disabled = false;
-          claimBtn.style.opacity = '1';
-          claimBtn.innerHTML = '🎉 CLAIM REVIVE (+1 ❤️)';
-        }
-      }, 1000);
-
-      claimBtn.onclick = () => {
-        if (claimBtn.disabled) return;
-        clearInterval(timer);
-        closeModal();
-        toast('Revived with +1 Heart!', '❤️');
-
-        const last = Host._lastRunState;
-        if (last && last.gameId){
-          const runnerOpts = {
-            ...(last.opts || {}),
-            lives: 1,
-            initialScore: last.score,
-            initialRound: Math.max(0, last.round - 1),
-            initialCorrect: last.correct,
-            initialWrong: last.wrong,
-            revivedThisRun: true
-          };
-          if (last.opts && last.opts.again){
-            last.opts.again(runnerOpts);
-          } else if (window.CodeArcade?.launch){
-            window.CodeArcade.launch(last.gameId);
-          }
-        }
+    if (openBtn){
+      openBtn.onclick = () => {
+        window.open(SPONSOR_URL, '_blank');
+        grantUnlimitedRevives();
+        toast('Unlimited revives unlocked! Thank you! 💖', '🎉', true);
+        doRevive();
       };
-    };
+    }
   });
 }
 

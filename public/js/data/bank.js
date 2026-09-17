@@ -907,6 +907,163 @@ export const BUGS = [
     '    n -= 2',
     'print("liftoff")'], bug:1,
     why:'Counting down by 2 from 10 never prints 1 and skips odd values — use <b>n &gt;= 0</b> with step 1 if you need each number.' },
+  /* ===== +20 EXPANSION: Bug Hunter ===== */
+  { lang:'py', diff:1, lines:[
+    'def countdown(n):',
+    '    for i in range(n, 0):',
+    '        print(i)',
+    '    print("Boom!")'], bug:1,
+    why:'<b>range(n, 0)</b> with positive n produces an empty range because default step is +1. Use <b>range(n, 0, -1)</b>.' },
+
+  { lang:'js', diff:1, lines:[
+    'function checkNaN(val) {',
+    '  if (val === NaN) {',
+    '    return true;',
+    '  }',
+    '  return false;',
+    '}'], bug:1,
+    why:'<b>NaN === NaN</b> is always false in JavaScript! Use <b>Number.isNaN(val)</b> instead.' },
+
+  { lang:'c', diff:2, lines:[
+    'int print_array_size(int arr[]) {',
+    '    int count = sizeof(arr) / sizeof(arr[0]);',
+    '    return count;',
+    '}'], bug:1,
+    why:'In C, array parameters decay to pointers, so <b>sizeof(arr)</b> is the pointer size (4 or 8 bytes), not the array length.' },
+
+  { lang:'java', diff:2, lines:[
+    'List<String> list = new ArrayList<>(Arrays.asList("a", "b", "c"));',
+    'for (String s : list) {',
+    '    if (s.equals("b")) {',
+    '        list.remove(s);',
+    '    }',
+    '}'], bug:3,
+    why:'Removing an element from a collection during enhanced for-each iteration throws <b>ConcurrentModificationException</b>. Use an Iterator or removeIf.' },
+
+  { lang:'py', diff:2, lines:[
+    'def make_grid(rows, cols):',
+    '    grid = [[0] * cols] * rows',
+    '    grid[0][0] = 1',
+    '    return grid'], bug:1,
+    why:'<b>[[0]*cols]*rows</b> replicates references to the <i>same</i> row list. Modifying one row modifies all rows. Use <b>[[0]*cols for _ in range(rows)]</b>.' },
+
+  { lang:'js', diff:2, lines:[
+    'async function getUserName(fetchUserPromise) {',
+    '  const user = fetchUserPromise();',
+    '  return user.name;',
+    '}'], bug:1,
+    why:'Missing <b>await</b> before <b>fetchUserPromise()</b>, so user is a pending Promise and user.name is undefined.' },
+
+  { lang:'py', diff:1, lines:[
+    'def divide(a, b):',
+    '    try:',
+    '        return a / b',
+    '    except ZeroDivisionError:',
+    '        pass'], bug:4,
+    why:'The function catches <b>ZeroDivisionError</b> but simply passes, returning <b>None</b> implicitly instead of handling or raising.' },
+
+  { lang:'c', diff:2, lines:[
+    'char *greet(const char *name) {',
+    '    char buf[10];',
+    '    strcpy(buf, "Hello, ");',
+    '    strcat(buf, name);',
+    '    return buf;',
+    '}'], bug:4,
+    why:'Returning a pointer to a stack-allocated local array <b>buf</b> causes undefined behavior as it is invalidated when the function returns.' },
+
+  { lang:'java', diff:1, lines:[
+    'public static double getPercentage(int part, int total) {',
+    '    double ratio = part / total;',
+    '    return ratio * 100;',
+    '}'], bug:1,
+    why:'<b>part / total</b> is integer division, truncating to 0 before assignment to double. Cast either operand to double: <b>(double) part / total</b>.' },
+
+  { lang:'py', diff:2, lines:[
+    'a = 1000',
+    'b = 1000',
+    'if a is b:',
+    '    print("identical")',
+    'else:',
+    '    print("different")'], bug:2,
+    why:'<b>is</b> tests object identity, not value equality. Integers beyond small-int cache may be distinct objects. Use <b>==</b>.' },
+
+  { lang:'js', diff:2, lines:[
+    'const numbers = ["10", "10", "10"];',
+    'const parsed = numbers.map(parseInt);',
+    'console.log(parsed);'], bug:1,
+    why:'<b>Array.prototype.map</b> passes (item, index) to parseInt, which uses index as the radix: ["10", NaN, 2]. Use <b>numbers.map(n => parseInt(n, 10))</b>.' },
+
+  { lang:'c', diff:2, lines:[
+    'int sum_to_n(int n) {',
+    '    int sum;',
+    '    for (int i = 1; i <= n; i++) {',
+    '        sum += i;',
+    '    }',
+    '    return sum;',
+    '}'], bug:1,
+    why:'<b>sum</b> is an uninitialized local variable containing garbage memory. It must be initialized: <b>int sum = 0;</b>.' },
+
+  { lang:'java', diff:1, lines:[
+    'String cleanText(String s) {',
+    '    s.trim();',
+    '    return s;',
+    '}'], bug:1,
+    why:'Strings in Java are immutable. <b>s.trim()</b> returns a new string and does not modify <b>s</b>. Use <b>return s.trim();</b>.' },
+
+  { lang:'py', diff:2, lines:[
+    'def check_all_positive(nums):',
+    '    gen = (x > 0 for x in nums)',
+    '    first_check = all(gen)',
+    '    second_check = any(gen)',
+    '    return first_check and second_check'], bug:3,
+    why:'Generators are one-time iterators. After <b>all(gen)</b> consumes the generator, <b>any(gen)</b> is evaluated on an exhausted generator (always False).' },
+
+  { lang:'js', diff:2, lines:[
+    'const counter = {',
+    '  count: 0,',
+    '  inc: () => {',
+    '    this.count++;',
+    '  }',
+    '};'], bug:3,
+    why:'Arrow functions inherit <b>this</b> from the enclosing lexical scope (window/global), not the object. Use a normal method: <b>inc() { this.count++; }</b>.' },
+
+  { lang:'java', diff:1, lines:[
+    'int day = 2;',
+    'switch (day) {',
+    '    case 1: System.out.println("Mon");',
+    '    case 2: System.out.println("Tue");',
+    '    case 3: System.out.println("Wed");',
+    '}'], bug:3,
+    why:'Missing <b>break;</b> in case 2 causes fallthrough into case 3, printing both "Tue" and "Wed".' },
+
+  { lang:'py', diff:1, lines:[
+    'data = {"apple": 5, "banana": 3}',
+    'for fruit in data:',
+    '    if data[fruit] < 4:',
+    '        del data[fruit]'], bug:3,
+    why:'Mutating a dictionary while iterating over it raises <b>RuntimeError: dictionary changed size during iteration</b>. Iterate over list(data.keys()).' },
+
+  { lang:'c', diff:3, lines:[
+    'void free_node(int *ptr) {',
+    '    free(ptr);',
+    '    free(ptr);',
+    '}'], bug:2,
+    why:'Calling <b>free(ptr)</b> twice on the same pointer is a double free vulnerability causing memory corruption or crash.' },
+
+  { lang:'js', diff:2, lines:[
+    'function sumArray(arr) {',
+    '  return arr.reduce((acc, x) => acc + x);',
+    '}',
+    'sumArray([]);'], bug:1,
+    why:'Calling <b>reduce</b> on an empty array without an initial value throws a <b>TypeError: Reduce of empty array with no initial value</b>.' },
+
+  { lang:'uni', diff:1, lines:[
+    'def check_status(code):',
+    '    if code = 200:',
+    '        return "OK"',
+    '    return "ERROR"'], bug:1,
+    why:'<b>=</b> is assignment, not comparison. Use <b>==</b> (or ===).' },
+
 ];
 
 /* ---------- 2. OUTPUT ORACLE ---------- */
@@ -1226,6 +1383,67 @@ export const ORACLE = [
     opts:['6','7','50','5'], why:'100→50→25→12→6→3→1 is six halvings.' },
   { lang:'uni', diff:3, code:['print(sorted([3,1,2], reverse=True))'], a:'[3, 2, 1]',
     opts:['[3, 2, 1]','[1, 2, 3]','[3, 1, 2]','Error'], why:'reverse=True sorts descending.' },
+  /* ===== +20 EXPANSION: Output Oracle ===== */
+  { lang:'py', diff:1, code:['print([x * 2 for x in range(4) if x % 2 == 1])'], a:'[2, 6]',
+    opts:['[2, 6]','[0, 2, 4, 6]','[1, 3]','[2, 4]'], why:'Odd numbers in range(4) are 1 and 3; multiplied by 2 gives [2, 6].' },
+
+  { lang:'js', diff:1, code:['console.log(typeof NaN)'], a:'"number"',
+    opts:['"number"','"NaN"','"undefined"','"object"'], why:'In JavaScript, NaN is a numeric data type representing Not-a-Number.' },
+
+  { lang:'py', diff:1, code:['a = (1,)', 'print(type(a).__name__)'], a:'tuple',
+    opts:['tuple','int','list','set'], why:'The trailing comma makes (1,) a tuple; (1) without a comma is just an int.' },
+
+  { lang:'js', diff:2, code:['console.log([1, 2] + [3, 4])'], a:'"1,23,4"',
+    opts:['"1,23,4"','[1, 2, 3, 4]','NaN','Error'], why:'+ with arrays converts both to strings ("1,2" and "3,4") and concatenates them.' },
+
+  { lang:'py', diff:2, code:['x = {1: "a", 1.0: "b"}', 'print(len(x))'], a:'1',
+    opts:['1','2','Error','None'], why:'1 == 1.0 and hash(1) == hash(1.0), so 1.0 overwrites key 1 in the dictionary.' },
+
+  { lang:'js', diff:2, code:['console.log(false == "0")'], a:'true',
+    opts:['true','false','undefined','Error'], why:'Loose equality (==) coerces both false and "0" to number 0, so 0 == 0 is true.' },
+
+  { lang:'py', diff:2, code:['a = [[]] * 3', 'a[0].append(5)', 'print(len(a[1]))'], a:'1',
+    opts:['1','0','3','Error'], why:'* 3 duplicates the inner list reference, so appending to a[0] modifies all 3 elements.' },
+
+  { lang:'js', diff:1, code:['console.log(0 || "fallback")'], a:'"fallback"',
+    opts:['"fallback"','0','false','undefined'], why:'0 is falsy, so || returns the right-hand operand.' },
+
+  { lang:'py', diff:2, code:['print(round(2.5), round(3.5))'], a:'2 4',
+    opts:['2 4','3 4','2 3','3 3'], why:'Python 3 uses round-half-to-even: 2.5 rounds to 2 and 3.5 rounds to 4.' },
+
+  { lang:'js', diff:2, code:['console.log(1 < 2 < 3, 3 > 2 > 1)'], a:'true false',
+    opts:['true false','true true','false false','false true'], why:'1 < 2 is true -> true < 3 (1 < 3) is true. But 3 > 2 is true -> true > 1 (1 > 1) is false.' },
+
+  { lang:'py', diff:1, code:['s = "Python"', 'print(s[::-2])'], a:'nhy',
+    opts:['nhy','not','Pto','yhn'], why:'Slicing with step -2 traverses backwards taking indices 5 ("n"), 3 ("h"), and 1 ("y").' },
+
+  { lang:'js', diff:1, code:['console.log(typeof (() => {}))'], a:'"function"',
+    opts:['"function"','"object"','"arrow"','"undefined"'], why:'Functions and arrow functions have typeof "function".' },
+
+  { lang:'py', diff:2, code:['a = {1, 2}', 'b = {2, 3}', 'print(sorted(a ^ b))'], a:'[1, 3]',
+    opts:['[1, 3]','[2]','[1, 2, 3]','[]'], why:'^ is symmetric difference: elements in either set but not both.' },
+
+  { lang:'java', diff:2, code:['String a = "ab" + "c";', 'String b = "abc";', 'System.out.println(a == b);'], a:'true',
+    opts:['true','false','Error','null'], why:'String literals concatenated at compile time are interned into the constant pool, pointing to the same object.' },
+
+  { lang:'js', diff:2, code:['console.log(Array(3).join("ha"))'], a:'"haha"',
+    opts:['"haha"','"hahaha"','"ha"','""'], why:'Array(3) creates 3 empty slots, so join places the separator between them (2 times).' },
+
+  { lang:'py', diff:1, code:['print(sum([True, False, True, True]))'], a:'3',
+    opts:['3','True','4','Error'], why:'In Python, bool is a subclass of int: True == 1 and False == 0.' },
+
+  { lang:'c', diff:2, code:['int x = 5;', 'int y = x++ + 10;', 'printf("%d %d", x, y);'], a:'6 15',
+    opts:['6 15','5 15','6 16','5 16'], why:'x++ evaluates to 5 for addition (y = 15), then increments x to 6.' },
+
+  { lang:'py', diff:2, code:['print(list(zip([1, 2], ["a", "b", "c"])))'], a:"[(1, 'a'), (2, 'b')]",
+    opts:["[(1, 'a'), (2, 'b')]", "[(1, 'a'), (2, 'b'), (None, 'c')]", "Error", "[(1, 2), ('a', 'b')]"], why:'zip stops at the length of the shortest iterable.' },
+
+  { lang:'js', diff:2, code:['console.log([..."hello"].length)'], a:'5',
+    opts:['5','1','Error','undefined'], why:'Spread syntax expands the string into an array of 5 single-character strings.' },
+
+  { lang:'uni', diff:1, code:['a = 10', 'b = 20', 'a, b = b, a', 'print(a - b)'], a:'10',
+    opts:['10','-10','0','20'], why:'After the swap, a is 20 and b is 10, so 20 - 10 = 10.' },
+
 ];
 
 /* ---------- 3. PARSONS PUZZLES ----------
@@ -2218,6 +2436,166 @@ export const PARSONS = [
     { t:'}', i:0 },
     { t:'System.out.println(sb.toString());', i:0 },
   ]},
+  /* ===== +20 EXPANSION: Stack Rebuild (Parsons) ===== */
+  { lang:'py', name:'Palindrome Check', diff:1, indentMatters:true, lines:[
+    { t:'def is_palindrome(s):', i:0 },
+    { t:'clean = s.lower().replace(" ", "")', i:1 },
+    { t:'return clean == clean[::-1]', i:1 },
+  ]},
+  { lang:'py', name:'Max Subarray (Kadane)', diff:2, indentMatters:true, lines:[
+    { t:'def max_subarray(nums):', i:0 },
+    { t:'cur = best = nums[0]', i:1 },
+    { t:'for x in nums[1:]:', i:1 },
+    { t:'cur = max(x, cur + x)', i:2 },
+    { t:'best = max(best, cur)', i:2 },
+    { t:'return best', i:1 },
+  ]},
+  { lang:'py', name:'BST Search', diff:2, indentMatters:true, lines:[
+    { t:'def search_bst(root, val):', i:0 },
+    { t:'if not root or root.val == val:', i:1 },
+    { t:'return root', i:2 },
+    { t:'if val < root.val:', i:1 },
+    { t:'return search_bst(root.left, val)', i:2 },
+    { t:'return search_bst(root.right, val)', i:1 },
+  ]},
+  { lang:'py', name:'Count Vowels', diff:1, indentMatters:true, lines:[
+    { t:'def count_vowels(text):', i:0 },
+    { t:'vowels = set("aeiouAEIOU")', i:1 },
+    { t:'return sum(1 for ch in text if ch in vowels)', i:1 },
+  ]},
+  { lang:'js', name:'Flatten Array', diff:1, indentMatters:false, lines:[
+    { t:'function flatten(arr) {', i:0 },
+    { t:'  return arr.reduce((acc, val) =>', i:0 },
+    { t:'    Array.isArray(val) ? acc.concat(flatten(val)) : acc.concat(val), []);', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'js', name:'Debounce Function', diff:2, indentMatters:false, lines:[
+    { t:'function debounce(fn, delay) {', i:0 },
+    { t:'  let timer;', i:0 },
+    { t:'  return (...args) => {', i:0 },
+    { t:'    clearTimeout(timer);', i:0 },
+    { t:'    timer = setTimeout(() => fn(...args), delay);', i:0 },
+    { t:'  };', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'js', name:'Promisify Delay', diff:1, indentMatters:false, lines:[
+    { t:'function sleep(ms) {', i:0 },
+    { t:'  return new Promise(resolve => {', i:0 },
+    { t:'    setTimeout(resolve, ms);', i:0 },
+    { t:'  });', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'js', name:'Array Chunking', diff:2, indentMatters:false, lines:[
+    { t:'function chunk(arr, size) {', i:0 },
+    { t:'  const res = [];', i:0 },
+    { t:'  for (let i = 0; i < arr.length; i += size) {', i:0 },
+    { t:'    res.push(arr.slice(i, i + size));', i:0 },
+    { t:'  }', i:0 },
+    { t:'  return res;', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'java', name:'Find Max in List', diff:1, indentMatters:false, lines:[
+    { t:'public static int findMax(List<Integer> nums) {', i:0 },
+    { t:'    int max = nums.get(0);', i:0 },
+    { t:'    for (int n : nums) {', i:0 },
+    { t:'        if (n > max) max = n;', i:0 },
+    { t:'    }', i:0 },
+    { t:'    return max;', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'java', name:'Reverse Array in Place', diff:2, indentMatters:false, lines:[
+    { t:'public static void reverse(int[] a) {', i:0 },
+    { t:'    int i = 0, j = a.length - 1;', i:0 },
+    { t:'    while (i < j) {', i:0 },
+    { t:'        int tmp = a[i]; a[i] = a[j]; a[j] = tmp;', i:0 },
+    { t:'        i++; j--;', i:0 },
+    { t:'    }', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'c', name:'String Length', diff:1, indentMatters:false, lines:[
+    { t:'int my_strlen(const char *s) {', i:0 },
+    { t:'    int len = 0;', i:0 },
+    { t:"    while (*s != '\\0') {", i:0 },
+    { t:'        len++;', i:0 },
+    { t:'        s++;', i:0 },
+    { t:'    }', i:0 },
+    { t:'    return len;', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'c', name:'Swap Pointers', diff:1, indentMatters:false, lines:[
+    { t:'void swap(int *a, int *b) {', i:0 },
+    { t:'    int temp = *a;', i:0 },
+    { t:'    *a = *b;', i:0 },
+    { t:'    *b = temp;', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'c', name:'Linear Search', diff:1, indentMatters:false, lines:[
+    { t:'int search(int arr[], int n, int target) {', i:0 },
+    { t:'    for (int i = 0; i < n; i++) {', i:0 },
+    { t:'        if (arr[i] == target) return i;', i:0 },
+    { t:'    }', i:0 },
+    { t:'    return -1;', i:0 },
+    { t:'}', i:0 },
+  ]},
+  { lang:'py', name:'Merge Two Sorted Lists', diff:2, indentMatters:true, lines:[
+    { t:'def merge_sorted(a, b):', i:0 },
+    { t:'i = j = 0; res = []', i:1 },
+    { t:'while i < len(a) and j < len(b):', i:1 },
+    { t:'if a[i] <= b[j]: res.append(a[i]); i += 1', i:2 },
+    { t:'else: res.append(b[j]); j += 1', i:2 },
+    { t:'return res + a[i:] + b[j:]', i:1 },
+  ]},
+  { lang:'py', name:'Breadth First Search', diff:3, indentMatters:true, lines:[
+    { t:'def bfs(graph, start):', i:0 },
+    { t:'visited, queue = set([start]), [start]', i:1 },
+    { t:'while queue:', i:1 },
+    { t:'node = queue.pop(0)', i:2 },
+    { t:'for neighbor in graph[node]:', i:2 },
+    { t:'if neighbor not in visited:', i:3 },
+    { t:'visited.add(neighbor); queue.append(neighbor)', i:4 },
+    { t:'return visited', i:1 },
+  ]},
+  { lang:'py', name:'Quick Sort Partition', diff:3, indentMatters:true, lines:[
+    { t:'def partition(arr, lo, hi):', i:0 },
+    { t:'pivot = arr[hi]', i:1 },
+    { t:'i = lo - 1', i:1 },
+    { t:'for j in range(lo, hi):', i:1 },
+    { t:'if arr[j] < pivot:', i:2 },
+    { t:'i += 1; arr[i], arr[j] = arr[j], arr[i]', i:3 },
+    { t:'arr[i + 1], arr[hi] = arr[hi], arr[i + 1]', i:1 },
+    { t:'return i + 1', i:1 },
+  ]},
+  { lang:'py', name:'Find Missing Number', diff:1, indentMatters:true, lines:[
+    { t:'def find_missing(nums, n):', i:0 },
+    { t:'expected = n * (n + 1) // 2', i:1 },
+    { t:'actual = sum(nums)', i:1 },
+    { t:'return expected - actual', i:1 },
+  ]},
+  { lang:'py', name:'Matrix Transpose', diff:2, indentMatters:true, lines:[
+    { t:'def transpose(mat):', i:0 },
+    { t:'rows, cols = len(mat), len(mat[0])', i:1 },
+    { t:'return [[mat[r][c] for r in range(rows)] for c in range(cols)]', i:1 },
+  ]},
+  { lang:'py', name:'Two Sum Map', diff:2, indentMatters:true, lines:[
+    { t:'def two_sum(nums, target):', i:0 },
+    { t:'seen = {}', i:1 },
+    { t:'for i, n in enumerate(nums):', i:1 },
+    { t:'diff = target - n', i:2 },
+    { t:'if diff in seen: return [seen[diff], i]', i:2 },
+    { t:'seen[n] = i', i:2 },
+    { t:'return []', i:1 },
+  ]},
+  { lang:'uni', name:'Euclidean GCD', diff:1, indentMatters:false, lines:[
+    { t:'function gcd(a, b) {', i:0 },
+    { t:'  while (b !== 0) {', i:0 },
+    { t:'    let temp = b;', i:0 },
+    { t:'    b = a % b;', i:0 },
+    { t:'    a = temp;', i:0 },
+    { t:'  }', i:0 },
+    { t:'  return a;', i:0 },
+    { t:'}', i:0 },
+  ]},
+
 ];
 
 /* ---------- 4. BINARY BLASTER ---------- */
@@ -2352,6 +2730,28 @@ export const BIN_LEVELS = [
   { mode:'units', diff:1, q:'0xFF in decimal?', a:'255', opts:['255','256','15','128'], why:'15×16 + 15 = 255.' },
   { mode:'units', diff:1, q:'Largest 4-bit unsigned value?', a:'15', opts:['15','16','7','8'], why:'2^4 - 1 = 15.' },
   { mode:'units', diff:2, q:'Binary 1000 0000 as an unsigned byte?', a:'128', opts:['128','127','256','64'], why:'Only bit 7 is set → 2^7.' },
+  /* ===== +20 EXPANSION: Binary Blaster ===== */
+  { mode:'dec2bin', diff:1, q:'Convert 18 to 8-bit binary', a:'00010010', opts:['00010010','00010001','00010100','00001010'], why:'16 + 2 = 18 → 00010010.' },
+  { mode:'bin2dec', diff:1, q:'What decimal is 0b01010101?', a:'85', opts:['85','84','170','69'], why:'64 + 16 + 4 + 1 = 85.' },
+  { mode:'hex2bin', diff:1, q:'Hex 0x3C in 8-bit binary?', a:'00111100', opts:['00111100','00111010','00111110','01001100'], why:'3 = 0011, C = 1100 → 00111100.' },
+  { mode:'logic', diff:2, q:'45 & 15 = ?', a:'13', opts:['13','15','45','0'], why:'00101101 & 00001111 = 00001101 (13).' },
+  { mode:'logic', diff:2, q:'18 | 9 = ?', a:'27', opts:['27','18','9','31'], why:'00010010 | 00001001 = 00011011 (27).' },
+  { mode:'logic', diff:2, q:'25 ^ 15 = ?', a:'22', opts:['22','10','25','31'], why:'00011001 ^ 00001111 = 00010110 (22).' },
+  { mode:'shift', diff:1, q:'14 >> 1 = ?', a:'7', opts:['7','28','6','8'], why:'14 / 2 = 7.' },
+  { mode:'shift', diff:2, q:'9 << 3 = ?', a:'72', opts:['72','27','36','64'], why:'9 * 8 = 72.' },
+  { mode:'twos', diff:2, q:'-4 in 8-bit two\'s complement', a:'11111100', opts:['11111100','00000100','11111011','11111101'], why:'Invert 00000100 -> 11111011, add 1 -> 11111100.' },
+  { mode:'twos', diff:2, q:'-6 in 8-bit two\'s complement', a:'11111010', opts:['11111010','00000110','11111001','11111100'], why:'Invert 00000110 -> 11111001, add 1 -> 11111010.' },
+  { mode:'mask', diff:2, q:'Which mask isolates bits 0 and 1?', a:'0x03', opts:['0x03','0x01','0x02','0x0F'], why:'0x03 in binary is 00000011, isolating bits 0 and 1.' },
+  { mode:'mask', diff:2, q:'How to check if bit 4 is set in x?', a:'(x & 0x10) != 0', opts:['(x & 0x10) != 0','(x & 4) != 0','(x >> 4) == 0','x & 0x04'], why:'Bit 4 has weight 2^4 = 16 = 0x10.' },
+  { mode:'mask', diff:2, q:'Expression to invert only bit 2 of x?', a:'x ^ 4', opts:['x ^ 4','x | 4','x & ~4','x ~ 4'], why:'XOR with 2^2 (4) flips bit 2.' },
+  { mode:'units', diff:1, q:'How many nibbles in 2 bytes?', a:'4', opts:['4','2','8','16'], why:'1 byte = 2 nibbles; 2 bytes = 4 nibbles.' },
+  { mode:'units', diff:2, q:'0x80 in decimal?', a:'128', opts:['128','64','256','100'], why:'8 * 16 = 128.' },
+  { mode:'units', diff:2, q:'Decimal 250 in hexadecimal?', a:'0xFA', opts:['0xFA','0xFB','0xEA','0xF0'], why:'250 = 15*16 + 10 = FA.' },
+  { mode:'logic', diff:3, q:'NOT 0b00001111 as 8-bit unsigned (~15 & 0xFF)?', a:'240', opts:['240','255','0','16'], why:'Flipping the bits produces 11110000 which is 240.' },
+  { mode:'shift', diff:2, q:'(1 << 6) in decimal?', a:'64', opts:['64','32','128','16'], why:'2^6 = 64.' },
+  { mode:'units', diff:1, q:'How many distinct values can 16 bits represent?', a:'65,536', opts:['65,536','32,768','65,535','131,072'], why:'2^16 = 65,536.' },
+  { mode:'mask', diff:3, q:'What does x ^ x evaluate to?', a:'0', opts:['0','x','1','-1'], why:'Any value XORed with itself produces 0.' },
+
 ];
 
 /* ---------- 5. REGEX RANGER ----------
@@ -2582,6 +2982,48 @@ export const REGEX_LEVELS = [
     match:['<a>','<b>','<em>'], avoid:['a>','<b','plain'] },
   { name:'Anchored whole word', hint:'The line is exactly the word "ok".', par:8,
     match:['ok'], avoid:['okay','ok ','it is ok'] },
+  /* ===== +20 EXPANSION: Regex Ranger ===== */
+  { name:'Hex color code', hint:'# followed by 3 or 6 hex digits', par:11,
+    match:['#fff','#123456','#A0B1C2'], avoid:['#12','#12345','#gggggg','fff'] },
+  { name:'IP Address v4', hint:'Four numbers separated by dots', par:16,
+    match:['192.168.1.1','10.0.0.1','127.0.0.1'], avoid:['192.168.1','10.0','abc.def.ghi.jkl','192.168.1.1.1'] },
+  { name:'Ends with semicolon', hint:'Any string ending with a semicolon', par:3,
+    match:['return 0;','let x = 1;','x;'], avoid:['return 0','let x = 1','var y = 2 // comment'] },
+  { name:'HTTP or HTTPS URL', hint:'Starts with http:// or https://', par:12,
+    match:['http://foo.com','https://bar.org','https://x.io/path'], avoid:['ftp://foo.com','file:///home','htt://foo'] },
+  { name:'UUID format', hint:'8-4-4-4-12 hex format', par:20,
+    match:['12345678-1234-1234-1234-123456789abc','00000000-0000-0000-0000-000000000000'], avoid:['12345678-1234','not-a-uuid','12345678123412341234123456789abc'] },
+  { name:'Both Cases', hint:'Contains both uppercase and lowercase letters', par:15,
+    match:['JavaScript','PyThOn','CamelCase'], avoid:['alllower','ALLUPPER','12345!'] },
+  { name:'Binary string', hint:'String made entirely of 0s and 1s', par:7,
+    match:['0101','11110000','0','1'], avoid:['012','10a01','','0b101'] },
+  { name:'HTML tag', hint:'Enclosed in angle brackets like <div> or </span>', par:7,
+    match:['<div>','</span>','<p>','<br/>'], avoid:['div','<div','>span<','1 < 2'] },
+  { name:'US Phone Number', hint:'(xxx) xxx-xxxx or xxx-xxx-xxxx', par:20,
+    match:['(123) 456-7890','123-456-7890'], avoid:['1234567890','12-34-56','(12) 345-6789'] },
+  { name:'Time format 24h', hint:'HH:MM in 24-hour clock', par:15,
+    match:['14:30','09:15','23:59','00:00'], avoid:['25:00','12:60','9:30','12:5'] },
+  { name:'Valid CSS pixel value', hint:'Integer followed by px', par:7,
+    match:['16px','0px','1080px'], avoid:['16em','16%','px','16 px'] },
+  { name:'Semver version', hint:'major.minor.patch like 1.2.3', par:12,
+    match:['1.0.0','2.14.3','0.0.1'], avoid:['v1.0.0','1.0','1.0.0.1','beta'] },
+  { name:'C identifier', hint:'Letter or underscore, followed by letters, digits, or underscores', par:12,
+    match:['my_var','_count','total2','x'], avoid:['2fast','my-var','my var','$val'] },
+  { name:'Float with decimal', hint:'Number containing a decimal point', par:9,
+    match:['3.14','0.5','100.0'], avoid:['42','abc','3.',' .5'] },
+  { name:'Markdown header', hint:'Starts with 1 to 6 # followed by a space', par:9,
+    match:['# Title','## Subtitle','### Section'], avoid:['#NoSpace','Title #','###### Too many?'] },
+  { name:'Trailing whitespace', hint:'Line that ends with a space or tab', par:4,
+    match:['hello ','code\t','test  '], avoid:['hello','code','test'] },
+  { name:'CamelCase string', hint:'Starts with lowercase, has at least one uppercase letter', par:12,
+    match:['camelCase','getUserData','isReadyNow'], avoid:['PascalCase','snake_case','lowercase'] },
+  { name:'Only punctuation', hint:'String composed entirely of punctuation marks', par:8,
+    match:['!@#$%','...','?!','--'], avoid:['hi!','a.b','123','word'] },
+  { name:'Exact four digits', hint:'Exactly four consecutive digits', par:7,
+    match:['2024','1984','0000'], avoid:['123','12345','year','12a4'] },
+  { name:'Twitter handle', hint:'Starts with @ followed by 1 to 15 alphanumeric characters or underscore', par:13,
+    match:['@rishi','@code_arcade','@dev123'], avoid:['rishi','@@rishi','@with space','@a_very_long_handle_that_exceeds_fifteen_chars'] },
+
 ];
 
 /* ---------- 6. TERMINAL TYPER ---------- */
@@ -2744,6 +3186,28 @@ export const TYPE_LINES = [
   { lang:'uni', t:'x = (a && b) || (!c && d);' },
   { lang:'uni', t:'for (i = 0; i < n; i++) { total += arr[i]; }' },
   { lang:'uni', t:'O(n log n) average, O(n^2) worst case' },
+  /* ===== +20 EXPANSION: Terminal Typer ===== */
+  { lang:'py', t:'records = [row for row in csv.reader(f) if any(row)]' },
+  { lang:'py', t:'parser.add_argument("--verbose", "-v", action="store_true")' },
+  { lang:'py', t:'result = {k: v for k, v in d.items() if v > threshold}' },
+  { lang:'py', t:'matrix = [[0 for _ in range(cols)] for _ in range(rows)]' },
+  { lang:'js', t:'const params = new URLSearchParams(window.location.search);' },
+  { lang:'js', t:'const res = await Promise.allSettled(tasks.map(t => t()));' },
+  { lang:'js', t:'const clone = structuredClone(state.history.slice(-1)[0]);' },
+  { lang:'js', t:'window.addEventListener("resize", debounce(handleResize, 150));' },
+  { lang:'c',  t:'size_t len = snprintf(buf, sizeof(buf), "%s:%d", host, port);' },
+  { lang:'c',  t:'pthread_mutex_lock(&queue->lock);' },
+  { lang:'c',  t:'if (read_bytes == -1 && errno == EINTR) { continue; }' },
+  { lang:'c',  t:'FILE *fp = fopen(filename, "rb"); if (!fp) return -1;' },
+  { lang:'java', t:'Map<String, Integer> freq = new HashMap<>();' },
+  { lang:'java', t:'List<String> valid = list.stream().filter(s -> !s.isEmpty()).toList();' },
+  { lang:'java', t:'throw new IllegalArgumentException("Invalid ID: " + id);' },
+  { lang:'java', t:'CompletableFuture<Void> all = CompletableFuture.allOf(futures);' },
+  { lang:'uni', t:'docker run -d -p 8080:8080 --name app my-image:latest' },
+  { lang:'uni', t:'find . -type f -name "*.log" -mtime +7 -delete' },
+  { lang:'uni', t:'curl -s -X POST -H "Content-Type: application/json" -d "{}" $URL' },
+  { lang:'uni', t:'chmod 755 run.sh && ./run.sh --port 8080' },
+
 ];
 
 export const LANGS = [

@@ -1,9 +1,9 @@
 /* Code Arcade service worker — offline cache */
-const CACHE = 'codearcade-v3';
+const CACHE = 'codearcade-v4';
 const FILES = [
   './', './index.html', './manifest.webmanifest', './icons/icon.svg',
   './css/style.css',
-  './js/main.js', './js/core.js', './js/ui.js', './js/data/bank.js',
+  './js/main.js', './js/core.js', './js/ui.js', './js/cursor.js', './js/data/bank.js',
   './js/games/bughunter.js', './js/games/oracle.js', './js/games/parsons.js',
   './js/games/binary.js', './js/games/regex.js', './js/games/typer.js',
 ];

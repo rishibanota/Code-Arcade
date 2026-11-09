@@ -89,6 +89,9 @@ export function play(opts = {}){
       const b = e.target.closest('[data-b]'); if (!b || locked) return;
       const i = +b.dataset.b;
       bits[i] ^= 1;
+      b.classList.add('flip');
+      setTimeout(() => b.classList.remove('flip'), 180);
+      C.burstAt(b, 6, bits[i] ? '#00e5ff' : '#8792ad');
       C.sfx('bit'); C.buzz(9);
       drawBits();
     };
@@ -114,9 +117,13 @@ export function play(opts = {}){
     }
     const v = value();
     const live = Host.area.querySelector('#live');
+    const binLiveWrap = Host.area.querySelector('.bin-live');
     if (live){
       live.textContent = v;
       live.style.color = v === target ? 'var(--ok)' : 'var(--warn)';
+      if (binLiveWrap){
+        binLiveWrap.classList.toggle('match', v === target);
+      }
       Host.area.querySelector('#liveHex').textContent =
         v.toString(16).toUpperCase().padStart(2, '0');
     }

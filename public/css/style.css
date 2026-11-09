@@ -48,6 +48,11 @@ body{
   background-size:34px 34px;
   mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 78%);
   -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 78%);
+  animation:gridFloat 24s linear infinite;
+}
+@keyframes gridFloat{
+  0%{background-position:0 0}
+  100%{background-position:34px 68px}
 }
 #fxCanvas{position:fixed;inset:0;z-index:60;pointer-events:none}
 
@@ -362,3 +367,449 @@ textarea.save-box{width:100%;height:110px;background:var(--bg2);color:var(--fg);
   #powerBar{max-width:600px;margin-left:auto;margin-right:auto}
   #toastWrap{max-width:600px;margin-left:auto;margin-right:auto}
 }
+
+/* ============================================================
+   INTERACTIVE CUSTOM ARCADE CURSOR & ATMOSPHERE
+   ============================================================ */
+
+/* Disable system cursor when custom cursor is active on fine pointer */
+body.custom-cursor-active,
+body.custom-cursor-active * {
+  cursor: none !important;
+}
+body.custom-cursor-active textarea.save-box {
+  cursor: text !important;
+}
+
+#cursorWrap {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  display: none;
+  transition: opacity 0.2s ease;
+}
+
+#curDot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--p);
+  box-shadow: 0 0 10px var(--p), 0 0 20px var(--p);
+  pointer-events: none;
+  will-change: transform;
+  z-index: 10002;
+  transition: width 0.15s, height 0.15s, background-color 0.2s, box-shadow 0.2s;
+}
+
+#curRing {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--p);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--p) 60%, transparent);
+  pointer-events: none;
+  will-change: transform;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28),
+              height 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28),
+              border-color 0.2s,
+              background-color 0.2s,
+              box-shadow 0.2s,
+              border-radius 0.2s;
+}
+
+/* Reticle brackets for cyber style */
+.cur-bracket {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-color: var(--s);
+  border-style: solid;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+.cur-tl { top: -2px; left: -2px; border-width: 1.5px 0 0 1.5px; }
+.cur-tr { top: -2px; right: -2px; border-width: 1.5px 1.5px 0 0; }
+.cur-bl { bottom: -2px; left: -2px; border-width: 0 0 1.5px 1.5px; }
+.cur-br { bottom: -2px; right: -2px; border-width: 0 1.5px 1.5px 0; }
+
+.cur-cross-v, .cur-cross-h {
+  position: absolute;
+  background: var(--p);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.cur-cross-v { width: 1px; height: 14px; }
+.cur-cross-h { width: 14px; height: 1px; }
+
+/* Cursor Hover states */
+#cursorWrap.hovering #curDot {
+  width: 10px;
+  height: 10px;
+  background: var(--s);
+  box-shadow: 0 0 14px var(--s), 0 0 24px var(--s);
+}
+#cursorWrap.hovering #curRing {
+  width: 48px;
+  height: 48px;
+  border-color: var(--s);
+  background: color-mix(in srgb, var(--s) 12%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--s) 70%, transparent);
+}
+#cursorWrap.hovering .cur-bracket {
+  opacity: 1;
+}
+#cursorWrap.hovering .cur-tl { transform: translate(-3px, -3px); }
+#cursorWrap.hovering .cur-tr { transform: translate(3px, -3px); }
+#cursorWrap.hovering .cur-bl { transform: translate(-3px, 3px); }
+#cursorWrap.hovering .cur-br { transform: translate(3px, 3px); }
+
+/* Text input mode */
+#cursorWrap[data-mode="text"] #curRing {
+  width: 6px;
+  height: 28px;
+  border-radius: 3px;
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 25%, transparent);
+  animation: curBlink 0.9s infinite;
+}
+#cursorWrap[data-mode="text"] #curDot {
+  opacity: 0;
+}
+@keyframes curBlink { 50% { opacity: 0.25; } }
+
+/* Clicking / Mousedown */
+#cursorWrap.clicking #curRing {
+  transform: scale(0.72) !important;
+}
+#cursorWrap.clicking #curDot {
+  transform: scale(1.6) !important;
+}
+
+/* Click Shockwave Ripple */
+.cur-click-ripple {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--p);
+  box-shadow: 0 0 16px var(--p);
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: none;
+  z-index: 9999;
+  animation: curRipple 0.45s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+@keyframes curRipple {
+  0% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(5.8); }
+}
+
+/* Styles: Neon */
+#cursorWrap[data-style="neon"] #curRing {
+  border-width: 2px;
+  box-shadow: 0 0 16px var(--p), inset 0 0 10px var(--p);
+  animation: neonAura 2s ease-in-out infinite alternate;
+}
+@keyframes neonAura {
+  0% { filter: drop-shadow(0 0 3px var(--p)); }
+  100% { filter: drop-shadow(0 0 12px var(--s)); }
+}
+
+/* Styles: Crosshair */
+#cursorWrap[data-style="crosshair"] .cur-cross-v,
+#cursorWrap[data-style="crosshair"] .cur-cross-h {
+  opacity: 0.85;
+}
+#cursorWrap[data-style="crosshair"] #curRing {
+  border-style: dashed;
+}
+
+/* Styles: Pixel */
+#cursorWrap[data-style="pixel"] #curRing {
+  border-radius: 0;
+  border: 2px solid var(--warn);
+  box-shadow: 2px 2px 0 #000;
+  image-rendering: pixelated;
+}
+#cursorWrap[data-style="pixel"] #curDot {
+  border-radius: 0;
+  background: var(--warn);
+}
+
+/* ---- CRT Arcade Cabinet Scanlines Overlay ---- */
+#crtOverlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 55;
+  display: none;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.015), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 6px 100%;
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.65);
+}
+body.has-crt #crtOverlay {
+  display: block;
+}
+
+/* Screen Flash feedback */
+#screenFlash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 58;
+  opacity: 0;
+  transition: opacity 0.28s ease-out;
+}
+#screenFlash.bad {
+  background: radial-gradient(circle, transparent 40%, rgba(255, 84, 112, 0.45));
+  opacity: 1;
+}
+#screenFlash.good {
+  background: radial-gradient(circle, transparent 45%, rgba(61, 220, 132, 0.35));
+  opacity: 1;
+}
+#screenFlash.boss {
+  background: radial-gradient(circle, transparent 35%, rgba(255, 62, 165, 0.45));
+  opacity: 1;
+}
+
+/* ---- Floating Combat Numbers & Popup FX ---- */
+#floatTextWrap {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 70;
+  overflow: hidden;
+}
+.float-text {
+  position: absolute;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: 0 0 10px rgba(0,0,0,0.85), 0 0 16px currentColor;
+  animation: floatUp 0.85s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+.float-text.xp { color: var(--warn); }
+.float-text.combo { color: var(--p); font-size: 19px; }
+.float-text.boss { color: var(--s); font-size: 22px; font-weight: 900; }
+.float-text.miss { color: var(--bad); font-size: 16px; }
+.float-text.power { color: var(--ok); }
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) translateY(0);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.25) translateY(-8px);
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1.0) translateY(-18px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9) translateY(-54px);
+  }
+}
+
+/* ---- Boss Encounter Banner ---- */
+.boss-banner {
+  background: linear-gradient(90deg, #ff0055, #ff3ea5, #ff0055);
+  background-size: 200% 100%;
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 2px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 12px;
+  box-shadow: 0 0 24px rgba(255, 62, 165, 0.7);
+  animation: bossGlitch 1.2s infinite, bossSlide 0.4s ease;
+}
+@keyframes bossGlitch {
+  0%, 100% { background-position: 0% 50%; transform: none; }
+  50% { background-position: 100% 50%; transform: scale(1.02); }
+}
+@keyframes bossSlide {
+  from { opacity: 0; transform: translateY(-16px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- Results Rank Stamp Slam ---- */
+.rank-stamp-wrap {
+  margin: 12px auto 16px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.rank-stamp {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  border: 4px solid var(--p);
+  display: grid;
+  place-items: center;
+  font-size: 38px;
+  font-weight: 900;
+  color: var(--p);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--p) 60%, transparent);
+  transform: scale(1) rotate(-8deg);
+  animation: stampSlam 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+.rank-stamp.rank-s {
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.75);
+}
+.rank-stamp.rank-a {
+  border-color: var(--ok);
+  color: var(--ok);
+  box-shadow: 0 0 30px rgba(61, 220, 132, 0.6);
+}
+.rank-stamp.rank-b {
+  border-color: var(--p);
+  color: var(--p);
+}
+.rank-stamp.rank-c {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.rank-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin-top: 6px;
+  color: var(--dim);
+  font-weight: 700;
+}
+@keyframes stampSlam {
+  0% {
+    opacity: 0;
+    transform: scale(3.5) rotate(-28deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(0.9) rotate(-6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-8deg);
+  }
+}
+
+/* ---- 3D Interactive Tilt & Specular Sheen ---- */
+.game-card, .shop-item, .daily-card {
+  perspective: 800px;
+  transform-style: preserve-3d;
+  transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.1),
+              box-shadow 0.22s,
+              border-color 0.22s;
+  background-image: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                    rgba(255, 255, 255, 0.08) 0%,
+                    transparent 65%);
+}
+.game-card:hover {
+  border-color: var(--p);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4), 0 0 20px color-mix(in srgb, var(--p) 35%, transparent);
+}
+.game-card:hover .gc-ico {
+  transform: scale(1.18) translateY(-2px);
+  transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+/* Staggered entrance animation */
+.game-grid .game-card {
+  animation: cardPopIn 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28) backwards;
+}
+.game-grid .game-card:nth-child(1) { animation-delay: 0.04s; }
+.game-grid .game-card:nth-child(2) { animation-delay: 0.08s; }
+.game-grid .game-card:nth-child(3) { animation-delay: 0.12s; }
+.game-grid .game-card:nth-child(4) { animation-delay: 0.16s; }
+.game-grid .game-card:nth-child(5) { animation-delay: 0.20s; }
+.game-grid .game-card:nth-child(6) { animation-delay: 0.24s; }
+
+@keyframes cardPopIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- Enhanced Game-Specific Animations ---- */
+/* Binary 3D Flip */
+.bit {
+  perspective: 400px;
+  transform-style: preserve-3d;
+  transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+              background-color 0.15s,
+              box-shadow 0.15s;
+}
+.bit.flip {
+  transform: rotateY(180deg) scale(1.1);
+}
+.bin-live.match {
+  color: var(--ok);
+  text-shadow: 0 0 16px var(--ok);
+  animation: matchGlow 0.6s ease;
+}
+@keyframes matchGlow {
+  50% { transform: scale(1.1); }
+}
+
+/* Terminal Typer Speedometer & Caret */
+.wpm-row div.hot {
+  border-color: var(--warn);
+  box-shadow: 0 0 16px rgba(255, 197, 49, 0.35);
+  animation: flamePulse 1s infinite alternate;
+}
+.wpm-row div.blazing {
+  border-color: var(--bad);
+  background: linear-gradient(135deg, var(--card), rgba(255, 84, 112, 0.2));
+  box-shadow: 0 0 22px rgba(255, 84, 112, 0.5);
+}
+@keyframes flamePulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.03); }
+}
+
+.typer-target .cur {
+  animation: caretPulse 0.8s infinite;
+}
+@keyframes caretPulse {
+  50% { box-shadow: 0 0 12px var(--p); opacity: 0.8; }
+}
+
+/* Combo Visual Escalation */
+.combo-item.hot {
+  border-color: var(--warn);
+  background: linear-gradient(135deg, var(--card), rgba(255, 197, 49, 0.15));
+  animation: comboPulse 0.8s ease-in-out infinite alternate;
+}
+.combo-item.godlike {
+  border-color: var(--s);
+  background: linear-gradient(135deg, var(--card), rgba(255, 62, 165, 0.25));
+  box-shadow: 0 0 18px var(--s);
+  animation: godlikeShine 0.5s ease-in-out infinite alternate;
+}
+@keyframes comboPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.04); }
+}
+@keyframes godlikeShine {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(45deg); }
+}
+

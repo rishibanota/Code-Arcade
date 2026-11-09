@@ -25,6 +25,21 @@
   <body data-theme="neon">
     <canvas id="fxCanvas" aria-hidden="true"></canvas>
     <div id="bgGrid" aria-hidden="true"></div>
+    <div id="crtOverlay" aria-hidden="true"></div>
+    <div id="screenFlash" aria-hidden="true"></div>
+    <div id="floatTextWrap" aria-hidden="true"></div>
+    <div id="cursorWrap" aria-hidden="true">
+      <div id="curDot"></div>
+      <div id="curRing">
+        <span class="cur-bracket cur-tl"></span>
+        <span class="cur-bracket cur-tr"></span>
+        <span class="cur-bracket cur-bl"></span>
+        <span class="cur-bracket cur-br"></span>
+        <span class="cur-cross-v"></span>
+        <span class="cur-cross-h"></span>
+      </div>
+      <div id="curPixel"></div>
+    </div>
 
     <!-- ============ TOP HUD ============ -->
     <header id="hud">
@@ -116,6 +131,10 @@
           <h2 id="resTitle">RUN COMPLETE</h2>
           <div class="res-score" id="resScore">0</div>
           <div class="res-best" id="resBest"></div>
+          <div class="rank-stamp-wrap" id="rankStampWrap">
+            <div class="rank-stamp" id="resRankStamp">S</div>
+            <div class="rank-label" id="resRankLabel">GODLIKE</div>
+          </div>
           <div class="res-rows" id="resRows"></div>
           <div class="res-actions">
             <button class="big-btn revive-btn" id="reviveBtn" style="background: linear-gradient(135deg, #ec4899, #8b5cf6); color: white; display: none;">💖 Revive +1 ❤️</button>

@@ -63,7 +63,7 @@ const DEFAULT_SAVE = {
   powerups:{ fifty:3, freeze:3, hint:3, skip:2 },
   dailyDate:null, dailyStreak:0, lastDaily:null,
   lang:'all',
-  settings:{ sfx:true, haptics:true },
+  settings:{ sfx:true, haptics:true, cursor:'cyber', crt:false, shake:true },
 };
 
 function deepMerge(base, over){
@@ -214,16 +214,32 @@ const TONES = {
   bit:     [{f:1250, d:.03, t:'square', v:.05}],
   end:     [{f:440,d:.12,t:'triangle',v:.1},{f:330,d:.18,t:'triangle',v:.09,at:.1}],
   tick:    [{f:1500, d:.02, t:'sine', v:.035}],
+  coin:    [{f:987, d:.06, t:'sine', v:.09}, {f:1318, d:.12, t:'sine', v:.11, at:.05}],
+  boss:    [{f:320, d:.18, t:'sawtooth', v:.14}, {f:220, d:.25, t:'sawtooth', v:.16, at:.12}, {f:440, d:.3, t:'square', v:.12, at:.26}],
+  stamp:   [{f:110, d:.22, t:'sine', v:.24}, {f:55, d:.32, t:'sawtooth', v:.18, at:.03}],
+  powerup: [{f:440, d:.08, t:'triangle', v:.09}, {f:660, d:.08, t:'triangle', v:.1, at:.06}, {f:880, d:.12, t:'triangle', v:.11, at:.12}],
+  whoosh:  [{f:300, d:.08, t:'sine', v:.07}, {f:600, d:.08, t:'sine', v:.05, at:.04}],
 };
 
-export function sfx(name){
+const COMBO_SCALE = [1, 1.059, 1.122, 1.189, 1.26, 1.335, 1.414, 1.498, 1.587, 1.682, 1.782, 2.0];
+
+export function sfx(name, opts = {}){
   if (!S.settings.sfx) return;
   const c = ac(); if (!c) return;
   const spec = TONES[name]; if (!spec) return;
   const now = c.currentTime;
+
+  let pitch = 1;
+  if (typeof opts === 'number') pitch = opts;
+  else if (opts && opts.combo) {
+    pitch = COMBO_SCALE[Math.min(COMBO_SCALE.length - 1, Math.max(0, opts.combo - 1))];
+  } else if (opts && opts.pitch) pitch = opts.pitch;
+
   spec.forEach(s => {
     const o = c.createOscillator(), g = c.createGain();
-    o.type = s.t; o.frequency.setValueAtTime(s.f, now + (s.at || 0));
+    o.type = s.t;
+    const targetFreq = Math.max(40, Math.min(6000, s.f * pitch));
+    o.frequency.setValueAtTime(targetFreq, now + (s.at || 0));
     g.gain.setValueAtTime(0, now + (s.at || 0));
     g.gain.linearRampToValueAtTime(s.v, now + (s.at || 0) + .012);
     g.gain.exponentialRampToValueAtTime(.0001, now + (s.at || 0) + s.d);
@@ -237,7 +253,7 @@ export function buzz(ms = 18){
   try { navigator.vibrate && navigator.vibrate(ms); } catch {}
 }
 
-/* ---------- Particles ---------- */
+/* ---------- Particles & Confetti ---------- */
 const cv = document.getElementById('fxCanvas');
 const ctx2d = cv ? cv.getContext('2d') : null;
 let parts = [], raf = null;
@@ -256,10 +272,27 @@ function tick(){
   ctx2d.clearRect(0, 0, innerWidth, innerHeight);
   parts = parts.filter(p => p.life > 0);
   parts.forEach(p => {
-    p.x += p.vx; p.y += p.vy; p.vy += .28; p.life--;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += (p.g !== undefined ? p.g : .28);
+    p.life--;
     ctx2d.globalAlpha = Math.max(0, p.life / p.max);
     ctx2d.fillStyle = p.c;
-    ctx2d.fillRect(p.x, p.y, p.s, p.s);
+
+    if (p.isConfetti){
+      p.angle = (p.angle || 0) + (p.vRot || 0.1);
+      ctx2d.save();
+      ctx2d.translate(p.x, p.y);
+      ctx2d.rotate(p.angle);
+      ctx2d.fillRect(-p.s / 2, -p.s * 1.6 / 2, p.s, p.s * 1.6);
+      ctx2d.restore();
+    } else if (p.shape === 'circle'){
+      ctx2d.beginPath();
+      ctx2d.arc(p.x, p.y, p.s / 2, 0, Math.PI * 2);
+      ctx2d.fill();
+    } else {
+      ctx2d.fillRect(p.x, p.y, p.s, p.s);
+    }
   });
   ctx2d.globalAlpha = 1;
   raf = parts.length ? requestAnimationFrame(tick) : null;
@@ -272,18 +305,83 @@ export function burst(x, y, n = 20, col){
     const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 7;
     parts.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 2,
       s:2 + Math.random()*4, c:cs[(Math.random()*cs.length)|0],
-      life:34 + Math.random()*26, max:60 });
+      life:34 + Math.random()*26, max:60, g:.28 });
   }
-  if (parts.length > 460) parts = parts.slice(-460);
+  if (parts.length > 500) parts = parts.slice(-500);
   if (!raf) raf = requestAnimationFrame(tick);
 }
+
+export function confetti(n = 65){
+  if (!ctx2d) return;
+  const cs = ['#00e5ff','#ff3ea5','#3ddc84','#ffc531','#8a5cff','#ffffff','#ffd700'];
+  for (let i = 0; i < n; i++){
+    const x = Math.random() * innerWidth;
+    const y = -10 - Math.random() * 30;
+    parts.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 5,
+      vy: 2 + Math.random() * 5,
+      s: 5 + Math.random() * 5,
+      c: cs[(Math.random() * cs.length) | 0],
+      life: 80 + Math.random() * 50,
+      max: 130,
+      g: 0.12,
+      isConfetti: true,
+      vRot: (Math.random() - 0.5) * 0.25,
+      angle: Math.random() * Math.PI * 2,
+    });
+  }
+  if (!raf) raf = requestAnimationFrame(tick);
+}
+
+export function trailSpark(x, y, isHover = false){
+  if (!ctx2d) return;
+  const col = isHover ? '#ff3ea5' : '#00e5ff';
+  parts.push({
+    x: x + (Math.random() - 0.5) * 6,
+    y: y + (Math.random() - 0.5) * 6,
+    vx: (Math.random() - 0.5) * 1.5,
+    vy: (Math.random() - 0.5) * 1.5 - 0.3,
+    s: 2 + Math.random() * 2.5,
+    c: col,
+    life: 14 + Math.random() * 8,
+    max: 22,
+    g: 0.04,
+    shape: 'circle',
+  });
+  if (!raf) raf = requestAnimationFrame(tick);
+}
+
+export function floatText(text, x, y, type = 'xp'){
+  const wrap = document.getElementById('floatTextWrap');
+  if (!wrap) return;
+  const el = document.createElement('div');
+  el.className = `float-text ${type}`;
+  el.textContent = text;
+  // If coordinates are inside screen, clamp them
+  const posX = Math.max(40, Math.min(innerWidth - 40, x || innerWidth / 2));
+  const posY = Math.max(60, Math.min(innerHeight - 60, y || innerHeight / 2));
+  el.style.left = posX + 'px';
+  el.style.top = posY + 'px';
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 860);
+}
+
+export function screenFlash(type = 'good'){
+  const el = document.getElementById('screenFlash');
+  if (!el) return;
+  el.className = type;
+  setTimeout(() => { el.className = ''; }, 300);
+}
+
 export function burstAt(el, n = 18, col){
   if (!el) return;
   const r = el.getBoundingClientRect();
   burst(r.left + r.width/2, r.top + r.height/2, n, col);
 }
+
 export function shake(el){
-  if (!el) return;
+  if (!el || S.settings.shake === false) return;
   el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
 }
 

@@ -50,10 +50,14 @@ export function play(opts = {}){
     Host.round++;
     const q = pool[idx++ % pool.length];
     const isBoss = Host.round % 10 === 0;
-    if (isBoss) Host.bosses++;
+    if (isBoss){
+      Host.bosses++;
+      Host.triggerBossWarning();
+    }
     const secs = isBoss ? 16 : Math.max(12, 26 - q.diff * 3);
 
     Host.area.innerHTML = `
+      ${isBoss ? '<div class="boss-banner">⚠ LEVEL 10 BOSS: 3× SCORE ⚠</div>' : ''}
       <p class="q-title">FIND THE BUG
         <span class="q-badge">${q.lang.toUpperCase()}</span>
         <span class="q-badge">LVL ${q.diff}</span>
@@ -87,9 +91,13 @@ export function play(opts = {}){
     let alive = true;
     if (line === q.bug){
       S.stats.bugs++;
+      C.burstAt(bugEl, 24, '#3ddc84');
       Host.hit(isBoss ? 300 : 120, bugEl);
     } else {
-      if (el) el.classList.add('wrong');
+      if (el) {
+        el.classList.add('wrong');
+        C.burstAt(el, 14, '#ff5470');
+      }
       alive = Host.miss(true, Host.area);
     }
 

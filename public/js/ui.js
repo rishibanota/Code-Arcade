@@ -6,6 +6,7 @@
 import * as C from './core.js';
 import { GAMES, THEMES, ACHIEVEMENTS, S } from './core.js';
 import { LANGS } from './data/bank.js';
+import { setCursorStyle, getCursorStyle } from './cursor.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -79,6 +80,7 @@ C.on('achievement', a => toast(`${a.name} unlocked · +75`, a.ico, true));
 /* ---------- Theme ---------- */
 export function applyTheme(id){
   document.body.dataset.theme = id;
+  document.body.classList.toggle('has-crt', !!S.settings.crt);
   S.theme = id; C.save();
 }
 
@@ -223,9 +225,22 @@ function renderAchv(){
 
 /* ---------- SETTINGS ---------- */
 function renderSettings(){
+  const curStyle = S.settings.cursor || 'cyber';
   $('#settingsBody').innerHTML = `
     <div class="set-row">
-      <div><b>Sound effects</b><small>WebAudio blips, no files</small></div>
+      <div><b>Arcade Cursor</b><small>Morphing 60fps interactive pointer</small></div>
+      <button class="ghost-btn" id="cursorCycleBtn" style="font-weight:700;color:var(--p);min-width:105px">${curStyle.toUpperCase()}</button>
+    </div>
+    <div class="set-row">
+      <div><b>CRT Cabinet FX</b><small>Retro scanlines and phosphor glow</small></div>
+      <button class="toggle ${S.settings.crt ? 'on' : ''}" data-set="crt"><i></i></button>
+    </div>
+    <div class="set-row">
+      <div><b>Screen Impact Shake</b><small>Camera shakes on damage</small></div>
+      <button class="toggle ${S.settings.shake !== false ? 'on' : ''}" data-set="shake"><i></i></button>
+    </div>
+    <div class="set-row">
+      <div><b>Sound effects</b><small>WebAudio retro synthesizers</small></div>
       <button class="toggle ${S.settings.sfx ? 'on' : ''}" data-set="sfx"><i></i></button>
     </div>
     <div class="set-row">
@@ -293,7 +308,11 @@ export const Host = {
       this.lives > 5  ? '♥' + this.lives : '♥'.repeat(this.lives);
     $('#gCombo').textContent = 'x' + this.mult + (this.combo > 8 ? '⁺' : '');
     $('#gRound').textContent = this.stageLabel || this.round;
-    $('.combo-item').classList.toggle('hot', this.combo >= 3);
+    const ci = $('.combo-item');
+    if (ci){
+      ci.classList.toggle('hot', this.combo >= 3 && this.combo < 7);
+      ci.classList.toggle('godlike', this.combo >= 7);
+    }
     renderHud();
   },
 
@@ -306,14 +325,39 @@ export const Host = {
     this.sync();
   },
 
+  triggerBossWarning(){
+    C.sfx('boss');
+    C.screenFlash('boss');
+    C.buzz(50);
+    C.floatText('⚠ BOSS ENCOUNTER! ⚠', innerWidth / 2, innerHeight / 3, 'boss');
+  },
+
   hit(pts = 100, el){
     this.correct++; this.combo++;
     this.maxCombo = Math.max(this.maxCombo, this.combo);
     S.stats.correct++;
     this.add(pts);
-    C.sfx(this.combo >= 3 ? 'combo' : 'correct');
+    C.sfx(this.combo >= 3 ? 'combo' : 'correct', { combo: this.combo });
     C.buzz(14);
-    if (el) C.burstAt(el, 16, null);
+    const added = Math.round(pts * this.mult);
+    if (el) {
+      C.burstAt(el, 16, null);
+      const r = el.getBoundingClientRect();
+      const isHigh = this.combo >= 4;
+      C.floatText(
+        isHigh ? `🔥 +${added} (x${this.mult})` : `+${added}`,
+        r.left + r.width / 2,
+        r.top,
+        isHigh ? 'combo' : 'xp'
+      );
+    } else {
+      C.floatText(`+${added}`, innerWidth / 2, innerHeight / 2.5, 'xp');
+    }
+
+    if (this.combo === 3 || this.combo === 5 || this.combo === 10){
+      C.screenFlash('good');
+      C.floatText(`STREAK x${this.combo}! 🔥`, innerWidth / 2, innerHeight / 3, 'combo');
+    }
     C.checkAchievements({ combo: this.combo });
   },
 
@@ -322,7 +366,14 @@ export const Host = {
     S.stats.wrong++;
     if (costLife) this.lives--;
     C.sfx('wrong'); C.buzz(45);
-    if (el) C.shake(el);
+    C.screenFlash('bad');
+    if (el) {
+      C.shake(el);
+      const r = el.getBoundingClientRect();
+      C.floatText(costLife ? '💔 -1 LIFE' : 'MISS!', r.left + r.width / 2, r.top, 'miss');
+    } else {
+      C.floatText(costLife ? '💔 -1 LIFE' : 'MISS!', innerWidth / 2, innerHeight / 2.5, 'miss');
+    }
     this.sync();
     return this.lives > 0;
   },
@@ -380,7 +431,47 @@ export const Host = {
 
     const g = GAMES.find(x => x.id === gameId) || { name:'Run', ico:'🎮' };
     $('#resTitle').textContent = (extra.title || g.name.toUpperCase());
-    $('#resScore').textContent = this.score;
+    
+    // Smooth score count-up
+    const scoreEl = $('#resScore');
+    const finalScore = this.score;
+    const startTime = performance.now();
+    const duration = 750;
+    function animScore(t){
+      const progress = Math.min(1, (t - startTime) / duration);
+      const factor = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      scoreEl.textContent = Math.round(finalScore * factor);
+      if (progress < 1){
+        requestAnimationFrame(animScore);
+      } else {
+        scoreEl.textContent = finalScore;
+      }
+    }
+    requestAnimationFrame(animScore);
+
+    // Calculate Grade Rank
+    const rankStamp = $('#resRankStamp');
+    const rankLabel = $('#resRankLabel');
+    if (rankStamp && rankLabel){
+      let grade = 'C';
+      let label = 'CLEARED';
+      let rankClass = 'rank-c';
+      if (accuracy >= 95 && this.maxCombo >= 5){
+        grade = 'S'; label = 'GODLIKE'; rankClass = 'rank-s';
+      } else if (accuracy >= 80){
+        grade = 'A'; label = 'EXCELLENT'; rankClass = 'rank-a';
+      } else if (accuracy >= 65){
+        grade = 'B'; label = 'GOOD'; rankClass = 'rank-b';
+      }
+      rankStamp.className = `rank-stamp ${rankClass}`;
+      rankStamp.textContent = grade;
+      rankLabel.textContent = label;
+      C.sfx('stamp');
+      if (grade === 'S' || res.isBest){
+        setTimeout(() => C.confetti(65), 200);
+      }
+    }
+
     $('#resBest').textContent = res.isBest
       ? `🏆 NEW BEST! (was ${res.prev})`
       : `Best: ${S.bestScores[gameId] || 0}`;
@@ -516,11 +607,25 @@ export function wireUI(launcher){
   };
 
   $('#settingsBody').addEventListener('click', e => {
+    if (e.target.id === 'cursorCycleBtn'){
+      const STYLES = ['cyber', 'neon', 'crosshair', 'pixel', 'off'];
+      const current = S.settings.cursor || 'cyber';
+      const nextIdx = (STYLES.indexOf(current) + 1) % STYLES.length;
+      const nextStyle = STYLES[nextIdx];
+      S.settings.cursor = nextStyle;
+      setCursorStyle(nextStyle);
+      C.save(); C.sfx('tap'); C.buzz(12);
+      renderSettings();
+      return;
+    }
     const tg = e.target.closest('[data-set]');
     if (tg){
       const k = tg.dataset.set;
       S.settings[k] = !S.settings[k];
       tg.classList.toggle('on', S.settings[k]);
+      if (k === 'crt'){
+        document.body.classList.toggle('has-crt', S.settings.crt);
+      }
       C.save(); C.sfx('tap'); C.buzz(12);
       return;
     }
@@ -571,6 +676,29 @@ export function wireUI(launcher){
       });
     }
   });
+
+  // 3D Card tilt and specular tracking
+  document.addEventListener('mousemove', e => {
+    const card = e.target.closest('.game-card, .shop-item, .daily-card');
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -6;
+    const rotateY = ((x - centerX) / centerX) * 6;
+    card.style.transform = `perspective(700px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.025, 1.025, 1.025)`;
+    card.style.setProperty('--mouse-x', `${(x / rect.width * 100).toFixed(1)}%`);
+    card.style.setProperty('--mouse-y', `${(y / rect.height * 100).toFixed(1)}%`);
+  }, { passive: true });
+
+  document.addEventListener('mouseout', e => {
+    const card = e.target.closest('.game-card, .shop-item, .daily-card');
+    if (card && (!e.relatedTarget || !card.contains(e.relatedTarget))){
+      card.style.transform = '';
+    }
+  }, { passive: true });
 
   window.addEventListener('beforeunload', () => C.saveNow());
   document.addEventListener('visibilitychange', () => { if (document.hidden) C.saveNow(); });

@@ -69,11 +69,23 @@ export function play(opts = {}){
 
     const inp = Host.area.querySelector('#tin');
     inp.value = typed;
+    const updateWpmHeat = (val) => {
+      const box = Host.area.querySelector('#wpm')?.parentElement;
+      if (box){
+        box.classList.toggle('hot', val >= 35 && val < 60);
+        box.classList.toggle('blazing', val >= 60);
+      }
+    };
+    updateWpmHeat(wpm);
+
     inp.oninput = () => {
       if (!started) started = Date.now();
       const v = inp.value;
+      const curWpm = liveWpm(v);
       Host.area.querySelector('#tt').innerHTML = paint(v);
-      Host.area.querySelector('#wpm').textContent = liveWpm(v);
+      Host.area.querySelector('#wpm').textContent = curWpm;
+      updateWpmHeat(curWpm);
+      C.sfx('tick');
       if (v.length >= cur.length) check(v);
     };
     // Keep caret at end so painting stays in sync

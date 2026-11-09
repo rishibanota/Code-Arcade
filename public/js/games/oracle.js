@@ -49,11 +49,15 @@ export function play(opts = {}){
     Host.round++;
     cur = pool[idx++ % pool.length];
     const isBoss = Host.round % 10 === 0;
-    if (isBoss) Host.bosses++;
+    if (isBoss){
+      Host.bosses++;
+      Host.triggerBossWarning();
+    }
     curOpts = C.shuffle(cur.opts, rnd);
     const secs = isBoss ? 12 : 20;
 
     Host.area.innerHTML = `
+      ${isBoss ? '<div class="boss-banner">⚠ LEVEL 10 BOSS: 3× SCORE ⚠</div>' : ''}
       <p class="q-title">WHAT DOES IT PRINT?
         <span class="q-badge">${cur.lang.toUpperCase()}</span>
         ${isBoss ? '<span class="q-badge boss-tag">BOSS ×3</span>' : ''}
@@ -92,9 +96,13 @@ export function play(opts = {}){
     if (ok){
       S.stats.oracles++;
       const speedBonus = Math.max(0, Math.round(Math.min(left, maxTime) / 200));
+      if (el) C.burstAt(el, 20, '#3ddc84');
       Host.hit((isBoss ? 300 : 130) + speedBonus, el);
     } else {
-      if (el) el.classList.add('wrong');
+      if (el) {
+        el.classList.add('wrong');
+        C.burstAt(el, 14, '#ff5470');
+      }
       alive = Host.miss(true, Host.area);
     }
 

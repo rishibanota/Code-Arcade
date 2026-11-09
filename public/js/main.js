@@ -2,6 +2,7 @@
 import * as C from './core.js';
 import { S, GAMES } from './core.js';
 import { Host, wireUI, go, renderHud, renderHome, applyTheme, toast, modal, closeModal } from './ui.js';
+import { initCursor } from './cursor.js';
 
 import { play as bughunter } from './games/bughunter.js';
 import { play as oracle }    from './games/oracle.js';
@@ -105,6 +106,7 @@ function maybeIntro(){
 
 /* ---------- Boot ---------- */
 applyTheme(S.theme || 'neon');
+initCursor(S.settings.cursor || 'cyber', C.trailSpark);
 wireUI(launch);
 renderHome();
 renderHud();

@@ -813,3 +813,78 @@ body.has-crt #crtOverlay {
   100% { filter: hue-rotate(45deg); }
 }
 
+
+
+/* ============================================================
+   RESPONSIVE UI/UX PADDING, MARGINS & ACCESSIBILITY ENHANCEMENTS
+   ============================================================ */
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Fluid responsive padding for main container */
+#app {
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+
+#hud {
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+  padding-top: max(8px, env(safe-area-inset-top));
+}
+
+/* Touch targets: ensure minimum 44px tap area for buttons & interactive elements */
+button, .ghost-btn, .big-btn, .daily-card, .chip, .pw {
+  min-height: 44px;
+}
+
+.home-btns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* Tablet Breakpoint (640px to 1024px) */
+@media (min-width: 640px) {
+  #app, #hud, #powerBar, #toastWrap {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .game-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .home-btns {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Desktop Breakpoint (1024px and above) */
+@media (min-width: 1024px) {
+  #app, #hud, #powerBar, #toastWrap {
+    max-width: 860px;
+  }
+  .game-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .logo {
+    font-size: 42px;
+    letter-spacing: 2px;
+  }
+  .tagline {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .daily-card {
+    padding: 16px 20px;
+    margin-bottom: 18px;
+  }
+}
